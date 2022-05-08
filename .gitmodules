@@ -1,3 +1,6 @@
 [submodule "rust/speedy"]
 	path = rust/lib/speedy
 	url = git@github.com:rmw-lib/speedy.git
+[submodule "rust/lib/duckdb-rs"]
+	path = rust/lib/duckdb-rs
+	url = git@github.com:gcxfd/duckdb-rs.git
