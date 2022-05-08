@@ -18,7 +18,8 @@ TARGET=f'{platform.machine()}-{system}'
 
 NAME="rmw"
 
-$RUSTFLAGS="-C target-feature=+crt-static -C link-self-contained=yes -L native=/usr/lib -l static=clang -l static=stdc++"
+$RUSTFLAGS="-C target-feature=+crt-static -C link-self-contained=yes -L native=/usr/lib -l static=clang"
+# -l static=stdc++"
 
 cargo build \
 --release \
