@@ -12,14 +12,15 @@ if system == 'darwin':
   system = f'apple-{system}'
 elif system == 'linux':
   system = 'unknown-linux-musl'
+  $RUSTFLAGS="-C target-feature=+crt-static -C link-self-contained=yes -L native=/usr/lib -l static=clang"
+  # -l static=stdc++"
+
 # system = 'unknown-linux-gnu'
 
 TARGET=f'{platform.machine()}-{system}'
 
 NAME="rmw"
 
-$RUSTFLAGS="-C target-feature=+crt-static -C link-self-contained=yes -L native=/usr/lib -l static=clang"
-# -l static=stdc++"
 
 cargo build \
 --release \
