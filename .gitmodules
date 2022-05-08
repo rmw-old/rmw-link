@@ -1,0 +1,3 @@
+[submodule "rust/speedy"]
+	path = rust/lib/speedy
+	url = git@github.com:rmw-lib/speedy.git
