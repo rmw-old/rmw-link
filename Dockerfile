@@ -12,7 +12,7 @@ ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"
 ENV RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
 
 RUN \
-sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories &&\
+sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories &&\
 apk update &&\
 apk add clang-dev llvm curl &&\
 curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
