@@ -1,11 +1,15 @@
 FROM alpine
+<<<<<<< HEAD
 #SHELL ["/bin/bash", "-c"]
+=======
+>>>>>>> 045966a07f327ce24d2c170b9c8c7f8f1d7cf3f0
 
 USER root
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm-256color
 
 ENV TZ=Asia/Shanghai
+<<<<<<< HEAD
 ENV CARGO_HOME /opt/rust
 ENV RUSTUP_HOME /opt/rust
 ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"
@@ -24,6 +28,25 @@ COPY rust rust
 WORKDIR /rust
 
 #RUN source $CARGO_HOME/env && cargo build
+=======
+COPY docker /
+
+RUN \
+source ~/.zshrc &&\
+sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories &&\
+apk update &&\
+apk add gcc clang-dev python3 llvm curl zsh musl-dev upx py3-pip &&\
+pip install xonsh &&\
+curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
+
+SHELL ["/bin/zsh", "-c"]
+COPY rust rust
+WORKDIR /rust
+
+#RUN source ~/.zshrc && cargo build
+
+CMD ["/bin/zsh"]
+>>>>>>> 045966a07f327ce24d2c170b9c8c7f8f1d7cf3f0
 
 #RUN sed -i 's/archive.ubuntu.com/mirrors.163.com/g' /etc/apt/sources.list &&\
 #apt-get update &&\
@@ -124,4 +147,7 @@ WORKDIR /rust
 #RUN rm -rf /root
 #COPY --from=build / /
 #
+<<<<<<< HEAD
 #CMD ["/etc/rc.local"]
+=======
+>>>>>>> 045966a07f327ce24d2c170b9c8c7f8f1d7cf3f0
