@@ -19,7 +19,7 @@ apk update &&\
 apk add gcc clang-dev python3 llvm curl zsh musl-dev upx py3-pip &&\
 pip install xonsh &&\
 curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly &&\
-source /opt/rust/env &&\
+source /opt/cargo/env &&\
 rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-musl
 
 SHELL ["/bin/zsh", "-c"]
