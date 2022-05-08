@@ -8,8 +8,6 @@ ENV TZ=Asia/Shanghai
 #ENV CARGO_HOME /opt/rust
 #ENV RUSTUP_HOME /opt/rust
 
-#ENV RUSTUP_UPDATE_ROOT https://mirrors.tuna.tsinghua.edu.cn/rustup/rustup
-#ENV RUSTUP_DIST_SERVER https://mirrors.tuna.tsinghua.edu.cn/rustup
 ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"
 ENV RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
 
@@ -19,9 +17,12 @@ apk update &&\
 apk add clang-dev &&\
 rustup default nightly
 
-COPY rust /rust
+WORKDIR /
+COPY docker .
+COPY rust rust
 
-RUN cd /rust && cargo build
+WORKDIR /rust
+RUN cargo build
 
 #RUN sed -i 's/archive.ubuntu.com/mirrors.163.com/g' /etc/apt/sources.list &&\
 #apt-get update &&\
