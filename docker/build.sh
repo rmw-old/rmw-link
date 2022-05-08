@@ -5,4 +5,4 @@ cd $DIR
 set -ex
 
 docker build -t rmw-link-build .
-
+./run.sh
