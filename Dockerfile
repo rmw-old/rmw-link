@@ -5,7 +5,6 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm-256color
 
 ENV TZ=Asia/Shanghai
-<<<<<<< HEAD
 ENV CARGO_HOME /opt/rust
 ENV RUSTUP_HOME /opt/rust
 ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"
@@ -24,7 +23,6 @@ COPY rust rust
 WORKDIR /rust
 
 #RUN source $CARGO_HOME/env && cargo build
-=======
 COPY docker /
 
 RUN \
@@ -36,10 +34,10 @@ pip install xonsh &&\
 curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
 
 SHELL ["/bin/zsh", "-c"]
-COPY rust rust
-WORKDIR /rust
 
 #RUN source ~/.zshrc && cargo build
+#COPY rust rust
+#WORKDIR /rust
 
 CMD ["/bin/zsh"]
 
