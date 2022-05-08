@@ -12,9 +12,9 @@ ENV RUSTUP_UPDATE_ROOT https://mirrors.tuna.tsinghua.edu.cn/rustup/rustup
 ENV RUSTUP_DIST_SERVER https://mirrors.tuna.tsinghua.edu.cn/rustup
 
 RUN \
+sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories &&\
 apk update &&\
 apk add curl clang-dev llvm gcc g++ &&\
-sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories &&\
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 
