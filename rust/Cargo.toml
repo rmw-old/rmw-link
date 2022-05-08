@@ -20,4 +20,4 @@ codegen-units = 1
 debug-assertions = false
 overflow-checks = false
 opt-level = 3
-strip = true
+#strip = true

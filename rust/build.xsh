@@ -31,6 +31,7 @@ out=f"target/{TARGET}/release/{NAME}"
 strip @(out)
 
 ./sh/upx.sh
+
 upx --best --lzma @(out)
 
 print(out)
