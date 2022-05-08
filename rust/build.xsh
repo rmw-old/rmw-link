@@ -18,8 +18,7 @@ TARGET=f'{platform.machine()}-{system}'
 
 NAME="rmw"
 
-$PKG_CONFIG_ALL_STATIC="true"
-$RUSTFLAGS="-C target-feature=+crt-static"
+$RUSTFLAGS="-C target-feature=+crt-static -C link-self-contained=yes -L native=/usr/lib -l static=clang -l static=stdc++"
 
 cargo build \
 --release \
