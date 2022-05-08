@@ -10,3 +10,6 @@ log = "0.4.17"
 num_cpus = "1.13.1"
 config = { path = "../config" }
 const-str = "0.3.1"
+
+[patch.crates-io]
+libduckdb-sys = { path = "../lib/duckdb-rs/libduckdb-sys" }
