@@ -15,8 +15,7 @@ RUN \
 sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories &&\
 apk update &&\
 apk add curl clang-dev llvm gcc g++ &&\
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
+curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
 
 
 #RUN sed -i 's/archive.ubuntu.com/mirrors.163.com/g' /etc/apt/sources.list &&\
