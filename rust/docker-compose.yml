@@ -1,0 +1,37 @@
+
+version: '3.7'
+services:
+
+  rmwl-ubuntu-rmw:
+    container_name : rmwl-ubuntu-rmw
+    hostname : rmwl-ubuntu-rmw
+    image: rmwl/ubuntu
+    privileged: true
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    restart: unless-stopped
+    cap_add:
+      - SYS_PTRACE
+    ports:
+      - "30100:22"
+      - "30108:80"
+      - "30110-30115:30010-30015"
+    volumes:
+      - /mnt/data/docker/rmwl-ubuntu/user/rmw/ssh/etc/ssh/host:/etc/ssh/host
+      - /mnt/data/docker/rmwl-ubuntu/user/rmw/ssh/root/.ssh:/root/.ssh
+      - /mnt/data/docker/rmwl-ubuntu/user/rmw/_/etc/rc.d:/etc/rc.d
+      - /mnt/data/docker/rmwl-ubuntu/user/rmw/_/etc/supervisor.d:/etc/supervisor.d
+      - /mnt/data/docker/rmwl-ubuntu/user/rmw/_/home:/home
+      - /mnt/data/docker/rmwl-ubuntu/user/rmw/_/root:/root
+      - /mnt/data/docker/rmwl-ubuntu/share:/share
+      - /tmp/docker/rmwl-ubuntu/user/rmw/tmp:/tmp
+      - /tmp/docker/rmwl-ubuntu/user/rmw/log:/var/log
+      - /etc/nginx/conf.d/rmwl-ubuntu/rmw:/etc/nginx/conf.d
+    networks:
+      - rmwl-ubuntu
+    device_requests:
+      - capabilities:
+        - "gpu"
+
+networks:
+  rmwl-ubuntu:
