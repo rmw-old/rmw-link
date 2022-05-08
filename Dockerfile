@@ -1,4 +1,4 @@
-FROM rust:alpine
+FROM alpine
 #SHELL ["/bin/bash", "-c"]
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -14,8 +14,8 @@ ENV RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
 RUN \
 sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories &&\
 apk update &&\
-apk add clang-dev &&\
-rustup default nightly
+apk add clang-dev llvm curl &&\
+curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
 
 WORKDIR /
 COPY docker .
