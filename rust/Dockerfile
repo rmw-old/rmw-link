@@ -1,4 +1,4 @@
-FROM alpine
+FROM rust:alpine
 #SHELL ["/bin/bash", "-c"]
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -14,8 +14,8 @@ ENV RUSTUP_DIST_SERVER https://mirrors.tuna.tsinghua.edu.cn/rustup
 RUN \
 sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories &&\
 apk update &&\
-apk add curl clang-dev llvm gcc g++ &&\
-curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
+apk add clang-dev &&\
+rustup default nightly
 
 
 #RUN sed -i 's/archive.ubuntu.com/mirrors.163.com/g' /etc/apt/sources.list &&\
