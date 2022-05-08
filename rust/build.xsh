@@ -5,7 +5,7 @@ import platform
 PWD = dirname(abspath(__file__))
 cd @(PWD)
 
-p"~/.xonshrc".exists() && source ~/.xonshrc
+p".xonshrc".exists() && source .xonshrc
 
 system = platform.system().lower()
 if system == 'darwin':
