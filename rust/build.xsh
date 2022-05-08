@@ -10,7 +10,7 @@ p".xonshrc".exists() && source .xonshrc
 system = platform.system().lower()
 if system == 'darwin':
   system = f'apple-{system}'
-else if system == 'linux':
+elif system == 'linux':
   system = 'unknown-linux-musl'
 # system = 'unknown-linux-gnu'
 
