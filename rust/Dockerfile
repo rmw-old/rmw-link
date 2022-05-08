@@ -1,5 +1,5 @@
 FROM alpine
-SHELL ["/bin/bash", "-c"]
+#SHELL ["/bin/bash", "-c"]
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm-256color
