@@ -5,8 +5,8 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm-256color
 
 ENV TZ=Asia/Shanghai
-ENV CARGO_HOME /opt/rust
-ENV RUSTUP_HOME /opt/rust
+#ENV CARGO_HOME /opt/rust
+#ENV RUSTUP_HOME /opt/rust
 
 #ENV RUSTUP_UPDATE_ROOT https://mirrors.tuna.tsinghua.edu.cn/rustup/rustup
 #ENV RUSTUP_DIST_SERVER https://mirrors.tuna.tsinghua.edu.cn/rustup
@@ -17,6 +17,9 @@ apk update &&\
 apk add clang-dev &&\
 rustup default nightly
 
+COPY rust /rust
+
+RUN cd /rust && cargo build
 
 #RUN sed -i 's/archive.ubuntu.com/mirrors.163.com/g' /etc/apt/sources.list &&\
 #apt-get update &&\
