@@ -1,4 +1,4 @@
-export CARGO_HOME=/opt/rust
+export CARGO_HOME=/opt/cargo
 export RUSTUP_HOME=/opt/rust
 export RUSTUP_DIST_SERVER="https://rsproxy.cn"
 export RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"

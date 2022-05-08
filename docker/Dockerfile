@@ -4,12 +4,6 @@ USER root
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm-256color
 
-ENV TZ=Asia/Shanghai
-ENV CARGO_HOME /opt/rust
-ENV RUSTUP_HOME /opt/rust
-ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"
-ENV RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
-
 COPY os /
 
 RUN \
@@ -18,7 +12,9 @@ sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories &&\
 apk update &&\
 apk add gcc clang-dev python3 llvm curl zsh musl-dev upx py3-pip &&\
 pip install xonsh &&\
-curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly
+curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly &&\
+source /opt/cargo/env &&\
+rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-musl
 
 SHELL ["/bin/zsh", "-c"]
 
