@@ -1,0 +1,26 @@
+[package]
+name = "rmwlib"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+default = ["upnp"]
+upnp = ["dep:upnp"]
+
+[dependencies]
+addrbytes = { path = "../addrbytes" }
+anyhow = "1.0.57"
+async-std = "1.11.0"
+config = { path = "../config" }
+const-str = "0.3.1"
+db = { path = "../db" }
+dir = { path = "../dir" }
+enum_dispatch = "0.3.8"
+err = { path = "../err" }
+expire_map = { path = "../expire_map" }
+log = "0.4.17"
+num_cpus = "1.13.1"
+num_enum = "0.5.7"
+speedy = { path = "../lib/speedy" }
+upnp = { path = '../upnp', optional = true }

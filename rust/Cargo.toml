@@ -1,0 +1,23 @@
+[workspace]
+members = [
+  "rmw",
+  "cli",
+  "db",
+  "dir",
+  "config",
+  "logger",
+  "err",
+  "expire_map",
+  "addrbytes",
+  "time"
+]
+exclude = ['lib']
+
+[profile.release]
+lto = true
+panic = 'abort'
+codegen-units = 1
+debug-assertions = false
+overflow-checks = false
+opt-level = 3
+strip = true
