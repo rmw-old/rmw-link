@@ -18,8 +18,8 @@ TARGET=f'{platform.machine()}-{system}'
 
 NAME="rmw"
 
-$PKG_CONFIG_ALL_STATIC=true
-$RUSTFLAGS=-C target-feature=+crt-static
+$PKG_CONFIG_ALL_STATIC="true"
+$RUSTFLAGS="-C target-feature=+crt-static"
 
 cargo build \
 --release \
