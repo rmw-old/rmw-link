@@ -1,8 +1,4 @@
 FROM alpine
-<<<<<<< HEAD
-#SHELL ["/bin/bash", "-c"]
-=======
->>>>>>> 045966a07f327ce24d2c170b9c8c7f8f1d7cf3f0
 
 USER root
 ENV DEBIAN_FRONTEND noninteractive
@@ -46,7 +42,6 @@ WORKDIR /rust
 #RUN source ~/.zshrc && cargo build
 
 CMD ["/bin/zsh"]
->>>>>>> 045966a07f327ce24d2c170b9c8c7f8f1d7cf3f0
 
 #RUN sed -i 's/archive.ubuntu.com/mirrors.163.com/g' /etc/apt/sources.list &&\
 #apt-get update &&\
@@ -147,7 +142,4 @@ CMD ["/bin/zsh"]
 #RUN rm -rf /root
 #COPY --from=build / /
 #
-<<<<<<< HEAD
 #CMD ["/etc/rc.local"]
-=======
->>>>>>> 045966a07f327ce24d2c170b9c8c7f8f1d7cf3f0
