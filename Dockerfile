@@ -1,6 +1,7 @@
 FROM alpine
 #SHELL ["/bin/bash", "-c"]
 
+USER root
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm-256color
 
@@ -22,9 +23,7 @@ COPY rust rust
 
 WORKDIR /rust
 
-RUN \
-source $CARGO_HOME/env &&\
-cargo build
+#RUN source $CARGO_HOME/env && cargo build
 
 #RUN sed -i 's/archive.ubuntu.com/mirrors.163.com/g' /etc/apt/sources.list &&\
 #apt-get update &&\
