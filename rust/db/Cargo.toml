@@ -1,0 +1,12 @@
+[package]
+name = "db"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+duckdb = { version = "0.3.4", features = ["bundled", "buildtime_bindgen"] }
+log = "0.4.17"
+num_cpus = "1.13.1"
+config = { path = "../config" }
+const-str = "0.3.1"
