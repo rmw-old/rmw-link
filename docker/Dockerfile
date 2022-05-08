@@ -10,6 +10,8 @@ ENV RUSTUP_HOME /opt/rust
 ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"
 ENV RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
 
+COPY os /
+
 RUN \
 source ~/.zshrc &&\
 sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories &&\
