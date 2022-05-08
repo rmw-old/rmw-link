@@ -5,9 +5,8 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm-256color
 
 ENV TZ=Asia/Shanghai
-#ENV CARGO_HOME /opt/rust
-#ENV RUSTUP_HOME /opt/rust
-
+ENV CARGO_HOME /opt/rust
+ENV RUSTUP_HOME /opt/rust
 ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"
 ENV RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
 
@@ -22,7 +21,10 @@ COPY docker .
 COPY rust rust
 
 WORKDIR /rust
-RUN cargo build
+
+RUN \
+source $CARGO_HOME/env &&\
+cargo build
 
 #RUN sed -i 's/archive.ubuntu.com/mirrors.163.com/g' /etc/apt/sources.list &&\
 #apt-get update &&\
