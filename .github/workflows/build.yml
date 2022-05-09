@@ -44,4 +44,4 @@ jobs:
         if: startsWith(matrix.platform, 'ubuntu') && startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            docker/rmw-linux-x64_64.tar.xz
+            docker/rmw-x86_64-linux-gun.tar.xz

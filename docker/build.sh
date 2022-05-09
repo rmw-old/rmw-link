@@ -17,4 +17,4 @@ docker cp rmw-link-build:/root/rust/target/x86_64-unknown-linux-gnu/release/rmw 
 
 chmod +x rmw
 
-tar caf rmw-linux-x64_64.tar.xz rmw
+tar caf rmw-x86_64-linux-gun.tar.xz rmw
