@@ -5,3 +5,4 @@ cd $DIR
 set -ex
 
 docker buildx build -t rmwl/build .
+docker push rmwl/build
