@@ -4,6 +4,8 @@ DIR=$(dirname $(realpath "$0"))
 cd $DIR
 set -ex
 
+git submodule update --init --recursive --progress
+
 docker run --name rmw-link-build \
   -v $DIR/../rust:/root/rust \
   -v $DIR/cache/rust/git:/opt/rust/git \
