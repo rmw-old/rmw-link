@@ -8,4 +8,4 @@ docker run -it --rm \
   -v $DIR/cache/cargo/git:/opt/cargo/git \
   -v $DIR/cache/cargo/registry:/opt/cargo/registry \
   rmw-link-build \
-  /bin/sh -c "cd /root/rust && /bin/zsh"
+  /bin/zsh -c "cd /root/rust && ./build.xsh"

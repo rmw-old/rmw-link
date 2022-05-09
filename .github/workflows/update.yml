@@ -1,0 +1,31 @@
+name: update
+
+on:
+  workflow_dispatch:
+  #schedule:
+  #  - cron: '59 0 * * *'
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: build
+    strategy:
+      matrix:
+        # platform: [windows-latest]
+        # platform: [macos-latest]
+        #python-version: [3.9]
+        # platform: [macos-latest,windows-latest]
+        platform: [ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: build-linux
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: |
+          ./docker/build.sh
