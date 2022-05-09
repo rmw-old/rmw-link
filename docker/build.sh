@@ -11,7 +11,8 @@ docker run --name rmw-link-build \
   rmw-link-build \
   /bin/zsh -c "cd /root/rust && ./build.xsh"
 
-docker cp rmw-link-build:/root/rust/target/x86_64-unknown-linux-gnu/release/rmw /tmp/rmw
-cd /tmp
+docker cp rmw-link-build:/root/rust/target/x86_64-unknown-linux-gnu/release/rmw rmw
+
 chmod +x rmw
-tar caf rmw.tar.xz rmw
+
+tar caf rmw-linux-x64_64.tar.xz rmw
