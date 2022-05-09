@@ -1,4 +1,4 @@
-FROM alpine
+FROM ubuntu
 
 USER root
 ENV DEBIAN_FRONTEND noninteractive
@@ -6,23 +6,23 @@ ENV TERM xterm-256color
 
 COPY os /
 
-RUN \
-source ~/.zshrc &&\
-sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories &&\
-apk update &&\
-apk add ncurses-dev zlib-dev libffi-dev g++ gcc llvm-dev clang-static python3 llvm curl zsh musl-dev upx py3-pip clang-dev &&\
-pip install xonsh &&\
-curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly &&\
-source /opt/cargo/env &&\
-rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-musl
-
-SHELL ["/bin/zsh", "-c"]
-
-#RUN source ~/.zshrc && cargo build
-#COPY rust rust
-#WORKDIR /rust
-
-CMD ["/bin/zsh"]
+#RUN \
+#source ~/.zshrc &&\
+#sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories &&\
+#apk update &&\
+#apk add ncurses-dev zlib-dev libffi-dev g++ gcc llvm-dev clang-static python3 llvm curl zsh musl-dev upx py3-pip clang-dev &&\
+#pip install xonsh &&\
+#curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly &&\
+#source /opt/cargo/env &&\
+#rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-musl
+#
+#SHELL ["/bin/zsh", "-c"]
+#
+##RUN source ~/.zshrc && cargo build
+##COPY rust rust
+##WORKDIR /rust
+#
+#CMD ["/bin/zsh"]
 
 #RUN sed -i 's/archive.ubuntu.com/mirrors.163.com/g' /etc/apt/sources.list &&\
 #apt-get update &&\

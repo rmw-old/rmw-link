@@ -11,7 +11,7 @@ system = platform.system().lower()
 if system == 'darwin':
   system = f'apple-{system}'
 elif system == 'linux':
-  system = 'unknown-linux-musl'
+  system = 'unknown-linux-gun'
 # $RUSTFLAGS="-C target-feature=+crt-static -C link-self-contained=yes -L native=/usr/lib -l static=clang"
   # -l static=stdc++"
 
