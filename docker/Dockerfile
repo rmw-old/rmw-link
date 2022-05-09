@@ -16,7 +16,7 @@ RUN source /root/.zshrc &&\
 localedef -i zh_CN -c -f UTF-8 -A /usr/share/locale/locale.alias zh_CN.UTF-8 &&\
 curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly &&\
 chsh -s /bin/zsh &&\
-source /opt/cargo/env &&\
+source /opt/rust/env &&\
 rustup default nightly &&\
 rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
 
