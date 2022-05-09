@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
 DIR=$(dirname $(realpath "$0"))
 cd $DIR
