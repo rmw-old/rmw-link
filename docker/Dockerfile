@@ -6,10 +6,11 @@ ENV TERM xterm-256color
 COPY os /
 
 RUN \
-  source ~/.zshrc &&\
   sed -i "s/deb.debian.org/mirrors.aliyun.com/g" /etc/apt/sources.list &&\
   apt-get update &&\
-  apt-get install -y curl locales zsh python3 python3-pip xonsh upx \
+  apt-get install -y curl locales zsh python3 python3-pip xonsh upx
+SHELL ["/bin/zsh", "-c"]
+RUN source /root/.zshrc &&\
 	&& localedef -i zh_CN -c -f UTF-8 -A /usr/share/locale/locale.alias zh_CN.UTF-8 &&\
   curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly &&\
   chsh -s /bin/zsh &&\
@@ -18,7 +19,6 @@ rustup default nightly &&\
 rustup toolchain install nightly
 
 ENV LANG zh_CN.utf8
-SHELL ["/bin/zsh", "-c"]
 CMD ["/bin/zsh"]
 
 
