@@ -25,7 +25,22 @@ jobs:
         with:
           fetch-depth: 1
 
+      -
+        name: Set up Docker Buildx
+        if: startsWith(matrix.platform, 'ubuntu')
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Cache Docker layers
+        if: startsWith(matrix.platform, 'ubuntu')
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
       - name: build-linux
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
-          ./docker/build.sh
+          ./docker/make.sh
