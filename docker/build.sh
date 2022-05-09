@@ -6,8 +6,8 @@ set -ex
 
 docker run --name rmw-link-build \
   -v $DIR/../rust:/root/rust \
-  -v $DIR/cache/cargo/git:/opt/cargo/git \
-  -v $DIR/cache/cargo/registry:/opt/cargo/registry \
+  -v $DIR/cache/rust/git:/opt/rust/git \
+  -v $DIR/cache/rust/registry:/opt/rust/registry \
   rmw-link-build \
   /bin/zsh -c "cd /root/rust && ./build.xsh"
 
