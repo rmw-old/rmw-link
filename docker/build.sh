@@ -6,7 +6,7 @@ set -ex
 
 git submodule update --init --recursive --progress
 
-docker run --name rmw-link-build \
+docker run --name rmwl/build \
   -v $DIR/../rust:/root/rust \
   -v $DIR/cache/rust/git:/opt/rust/git \
   -v $DIR/cache/rust/registry:/opt/rust/registry \
