@@ -58,7 +58,6 @@ jobs:
       - name: build-linux
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
-          source /opt/rust/env
           ./docker/build.sh
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache

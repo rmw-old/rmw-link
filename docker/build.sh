@@ -9,7 +9,7 @@ docker run --name rmw-link-build \
   -v $DIR/cache/rust/git:/opt/rust/git \
   -v $DIR/cache/rust/registry:/opt/rust/registry \
   rmw-link-build \
-  /bin/zsh -c "cd /root/rust && ./build.xsh"
+  /bin/sh -c "cd /root/rust && source /opt/rust/env && ./build.xsh"
 
 docker cp rmw-link-build:/root/rust/target/x86_64-unknown-linux-gnu/release/rmw rmw
 
