@@ -48,7 +48,8 @@ jobs:
         with:
           context: docker
           push: false
-          tags: rmw-link-build
+          load: true
+          tags: rmw-link-build:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
 
