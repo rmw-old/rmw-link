@@ -1,18 +1,21 @@
 FROM debian
 
-#CNER root
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm-256color
 
 COPY os /
 
 RUN \
+  source ~/.zshrc &&\
   sed -i "s/deb.debian.org/mirrors.aliyun.com/g" /etc/apt/sources.list &&\
   apt-get update &&\
   apt-get install -y curl locales zsh python3 python3-pip xonsh upx \
 	&& localedef -i zh_CN -c -f UTF-8 -A /usr/share/locale/locale.alias zh_CN.UTF-8 &&\
   curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly &&\
-  chsh -s /bin/zsh
+  chsh -s /bin/zsh &&\
+source /opt/cargo/env &&\
+rustup default nightly &&\
+rustup toolchain install nightly
 
 ENV LANG zh_CN.utf8
 SHELL ["/bin/zsh", "-c"]
@@ -21,15 +24,14 @@ CMD ["/bin/zsh"]
 
 #apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 871920D1991BC93C &&\
 #RUN \
-#source ~/.zshrc &&\
 #sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories &&\
 #apk update &&\
 #apk add ncurses-dev zlib-dev libffi-dev g++ gcc llvm-dev clang-static python3 llvm curl zsh musl-dev upx py3-pip clang-dev &&\
 #pip install xonsh &&\
 #curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly &&\
 #source /opt/cargo/zhv &&\
-#rustup componzht add rust-src --toolchain nightly-x86_64-unknown-linux-musl
 #
+# rustup  add rust-src --toolchain nightly-x86_64-unknown-linux-musl
 #
 ##RUN source ~/.zshrc && cargo build
 ##COPY rust rust

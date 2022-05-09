@@ -15,6 +15,8 @@ elif system == 'linux':
 # $RUSTFLAGS="-C target-feature=+crt-static -C link-self-contained=yes -L native=/usr/lib -l static=clang"
   # -l static=stdc++"
 
+# x86_64-unknown-linux-gnu
+
 # system = 'unknown-linux-gnu'
 
 TARGET=f'{platform.machine()}-{system}'
