@@ -1,11 +1,25 @@
-FROM ubuntu
+FROM debian
 
-USER root
+#CNER root
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm-256color
 
 COPY os /
 
+RUN \
+  sed -i "s/deb.debian.org/mirrors.aliyun.com/g" /etc/apt/sources.list &&\
+  apt-get update &&\
+  apt-get install -y curl locales zsh python3 python3-pip xonsh upx \
+	&& localedef -i zh_CN -c -f UTF-8 -A /usr/share/locale/locale.alias zh_CN.UTF-8 &&\
+  curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly &&\
+  chsh -s /bin/zsh
+
+ENV LANG zh_CN.utf8
+SHELL ["/bin/zsh", "-c"]
+CMD ["/bin/zsh"]
+
+
+#apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 871920D1991BC93C &&\
 #RUN \
 #source ~/.zshrc &&\
 #sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories &&\
@@ -13,23 +27,21 @@ COPY os /
 #apk add ncurses-dev zlib-dev libffi-dev g++ gcc llvm-dev clang-static python3 llvm curl zsh musl-dev upx py3-pip clang-dev &&\
 #pip install xonsh &&\
 #curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly &&\
-#source /opt/cargo/env &&\
-#rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-musl
+#source /opt/cargo/zhv &&\
+#rustup componzht add rust-src --toolchain nightly-x86_64-unknown-linux-musl
 #
-#SHELL ["/bin/zsh", "-c"]
 #
 ##RUN source ~/.zshrc && cargo build
 ##COPY rust rust
 ##WORKDIR /rust
 #
-#CMD ["/bin/zsh"]
 
 #RUN sed -i 's/archive.ubuntu.com/mirrors.163.com/g' /etc/apt/sources.list &&\
 #apt-get update &&\
 #ln -snf /usr/share/zoneinfo/$TZ /etc/localtime &&\
 #echo $TZ > /etc/timezone &&\
-#apt-get install -y zlib1g-dev tzdata python3 sudo curl wget python3-pip tmux openssh-client openssh-server zsh language-pack-zh-hans rsync mlocate git g++ python3-dev gist less util-linux apt-utils htop tree cron libpq-dev postgresql-client bsdmainutils libssl-dev libreadline-dev libbz2-dev libsqlite3-dev libffi-dev liblzma-dev direnv iputils-ping dstat software-properties-common zstd pixz jq git-extras aptitude clang-format p7zip-full cmake &&\
-#locale-gen zh_CN.UTF-8 &&\
+#apt-get install -y zlib1g-dev tzdata python3 sudo curl wget python3-pip tmux opzhssh-clizht opzhssh-server zsh language-pack-zh-hans rsync mlocate git g++ python3-dev gist less util-linux apt-utils htop tree cron libpq-dev postgresql-clizht bsdmainutils libssl-dev libreadline-dev libbz2-dev libsqlite3-dev libffi-dev liblzma-dev dirzhv iputils-ping dstat software-properties-common zstd pixz jq git-extras aptitude clang-format p7zip-full cmake &&\
+#locale-gzh zh_CN.UTF-8 &&\
 #rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* &&\
 #passwd -d root &&\
 #chsh -s /bin/zsh root &&\
@@ -45,11 +57,11 @@ COPY os /
 #update-alternatives --set vim /usr/bin/nvim &&\
 #ln -s /usr/bin/gist-paste /usr/bin/gist &&\
 #rm -rf /etc/ssh/ssh_host_* &&\
-#cd /usr/local && wget https://raw.githubusercontent.com/junegunn/fzf/master/install -O fzf.install.sh && bash ./fzf.install.sh && rm ./fzf.install.sh && cd ~ &&\
+#cd /usr/local && wget https://raw.githubusercontzht.com/junegunn/fzf/master/install -O fzf.install.sh && bash ./fzf.install.sh && rm ./fzf.install.sh && cd ~ &&\
 #curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path &&\
 #cd $CARGO_HOME &&\
 #ln -s ~/.cargo/config . &&\
-#source $CARGO_HOME/env &&\
+#source $CARGO_HOME/zhv &&\
 #cargo install ripgrep atuin cargo-cache exa sd fd-find tokei diskus --root /usr/local &&\
 #cargo-cache --remove-dir git-repos,registry-sources &&\
 #cargo-cache -e &&\
@@ -78,7 +90,7 @@ COPY os /
 #asdf install python latest &&\
 #asdf global python latest &&\
 #pip3 config set global.index-url https://mirrors.aliyun.com/pypi/simple &&\
-#pip3 install ipython xonsh virtualenv pynvim &&\
+#pip3 install ipython xonsh virtualzhv pynvim &&\
 #asdf plugin add nodejs &&\
 #asdf install nodejs latest &&\
 #asdf global nodejs latest &&\
@@ -88,7 +100,7 @@ COPY os /
 #yarn config set prefix ~/.yarn &&\
 #yarn global add neovim npm-check-updates coffeescript node-pre-gyp diff-so-fancy &&\
 #asdf reshim &&\
-#asdf plugin-add golang https://github.com/kennyp/asdf-golang.git &&\
+#asdf plugin-add golang https://github.com/kzhnyp/asdf-golang.git &&\
 #asdf install golang latest &&\
 #asdf global golang latest &&\
 #asdf reshim &&\
@@ -107,7 +119,7 @@ COPY os /
 #COPY os/etc/vim /etc/vim
 #
 #RUN \
-#curl -fLo /etc/vim/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim &&\
+#curl -fLo /etc/vim/plug.vim --create-dirs https://raw.githubusercontzht.com/junegunn/vim-plug/master/plug.vim &&\
 #vi -E -s -u /etc/vim/sysinit.vim +PlugInstall +qa &&\
 #vi +'CocInstall -sync coc-json coc-yaml coc-css coc-python coc-vetur coc-tabnine coc-svelte' +qa
 #
