@@ -28,8 +28,17 @@ jobs:
       - uses: actions/cache@v3
         if: startsWith(matrix.platform, 'ubuntu')
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-cache
+          path: |
+            /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker
+
+      - uses: actions/cache@v3
+        if: startsWith(matrix.platform, 'ubuntu')
+        with:
+          path: |
+            docker/cache
+            rust/target
+          key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
 
       - uses: docker/setup-buildx-action@v2
         if: startsWith(matrix.platform, 'ubuntu')
