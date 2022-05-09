@@ -10,7 +10,7 @@ RUN \
 source ~/.zshrc &&\
 sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories &&\
 apk update &&\
-apk add ncurses-dev zlib-dev libffi-dev g++ gcc llvm-dev clang-static python3 llvm curl zsh musl-dev upx py3-pip &&\
+apk add ncurses-dev zlib-dev libffi-dev g++ gcc llvm-dev clang-static python3 llvm curl zsh musl-dev upx py3-pip clang-dev &&\
 pip install xonsh &&\
 curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain nightly &&\
 source /opt/cargo/env &&\
