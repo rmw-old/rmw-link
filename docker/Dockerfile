@@ -8,7 +8,7 @@ COPY os /
 RUN \
   sed -i "s/deb.debian.org/mirrors.aliyun.com/g" /etc/apt/sources.list &&\
   apt-get update &&\
-  apt-get install -y curl locales zsh python3 python3-pip xonsh upx libclang-dev
+  apt-get install -y curl locales zsh python3 python3-pip xonsh libclang-dev
 
 SHELL ["/bin/zsh", "-c"]
 
