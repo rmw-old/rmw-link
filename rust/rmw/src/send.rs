@@ -28,7 +28,6 @@ impl<Addr: ToAddr> Send<Addr> {
     let m = map.clone();
     spawn(async move {
       for addr in boot {
-        dbg!(addr);
         m.add(addr);
         err::log(u.send_to(&[Cmd::Ping as u8], addr));
       }
