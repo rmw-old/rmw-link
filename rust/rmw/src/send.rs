@@ -36,9 +36,6 @@ impl<Addr: ToAddr> Send<Addr> {
   }
 
   pub async fn send(&self, msg: &[u8], addr: Addr) {
-    // &[Cmd::Ping as u8]
-    // Cmd::from_u8
-
     let msg_len = msg.len();
     let udp = &self.udp;
 
