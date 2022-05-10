@@ -44,7 +44,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: startsWith(matrix.platform, 'ubuntu')
         with:
-          path: docker/rmw-x86_64-linux-gun.tar.xz
+          name : rmw-x86_64-linux-gun.tar.xz
+          path : docker/rmw-x86_64-linux-gun.tar.xz
 
       - uses: softprops/action-gh-release@v1
         if: startsWith(matrix.platform, 'ubuntu') && startsWith(github.ref, 'refs/tags/')
