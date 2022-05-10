@@ -38,7 +38,7 @@ pub fn upnp(name: &str, port: u16, duration: u32) -> Option<(SocketAddrV4, Ipv4A
                     }
                   }
                 }
-                info!("upnp {} > {}", gateway_addr, err);
+                //info!("upnp {} > {}", gateway_addr, err);
                 return None;
               }
               Ok(_) => {
