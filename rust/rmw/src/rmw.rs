@@ -68,7 +68,7 @@ impl Rmw {
           config::get!(
             boot / v4,
             //54.177.127.37
-            vec![SocketAddrV4::new(Ipv4Addr::new(54, 177, 127, 37), 30110)]
+            vec![SocketAddrV4::new(Ipv4Addr::new(54, 177, 127, 37), 4910)]
           )
         );
       }
@@ -80,7 +80,7 @@ impl Rmw {
             vec![SocketAddrV6::new(
               //  2600:1f1c:626:9200:7b9a:4420:876a:4550
               Ipv6Addr::new(0x2600, 0x1f1c, 0x626, 0x9200, 0x7b9a, 0x4420, 0x876a, 0x4550),
-              30110,
+              4910,
               0,
               0
             )]
