@@ -14,9 +14,9 @@ fi
 
 project=rmw
 
-if [ ! -d target ] ; then
+#if [ ! -d target ] ; then
 cargo build -p $project
-fi
+#fi
 
 RUST_BACKTRACE=1 watchexec \
   --shell=none -w . \
