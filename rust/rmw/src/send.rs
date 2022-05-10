@@ -1,20 +1,7 @@
-use crate::{cmd::Cmd, req::Req};
-use addrbytes::ToBytes;
+use crate::{cmd::Cmd, req::Req, typedef::ToAddr};
 use async_std::{channel::Sender, task::spawn};
 use expire_map::ExpireMap;
 use std::net::UdpSocket;
-
-pub trait ToAddr = 'static
-  + ToBytes
-  + std::net::ToSocketAddrs
-  + std::hash::Hash
-  + std::marker::Send
-  + std::fmt::Debug
-  + std::fmt::Display
-  + std::marker::Sync
-  + Ord
-  + Copy
-  + Clone;
 
 pub struct Send<Addr: ToAddr> {
   pub send: Sender<Req>,
