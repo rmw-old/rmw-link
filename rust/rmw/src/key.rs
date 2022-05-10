@@ -7,7 +7,7 @@ fn keypair(seed: &[u8]) -> Keypair {
   Keypair { public, secret }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone)]
 pub struct Key {
   pub ed25519: Keypair,
   pub ed25519_pk: [u8; 30],

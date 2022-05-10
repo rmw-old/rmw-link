@@ -1404,6 +1404,7 @@ dependencies = [
  "speedy",
  "twox-hash",
  "upnp",
+ "x25519-dalek",
 ]
 
 [[package]]
