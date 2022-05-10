@@ -2,7 +2,7 @@ use crate::{cmd::Cmd, req::Req};
 use addrbytes::ToBytes;
 use async_std::{channel::Sender, task::spawn};
 use expire_map::ExpireMap;
-use std::net::{SocketAddr, UdpSocket};
+use std::net::UdpSocket;
 pub trait ToAddr = 'static
   + ToBytes
   + std::net::ToSocketAddrs
@@ -35,7 +35,7 @@ impl<Addr: ToAddr> Send<Addr> {
     Self { udp, send, map }
   }
 
-  pub async fn send(&self, msg: &[u8], addr: SocketAddr) {
+  pub async fn send(&self, msg: &[u8], addr: Addr) {
     // &[Cmd::Ping as u8]
     // Cmd::from_u8
 
@@ -49,6 +49,9 @@ impl<Addr: ToAddr> Send<Addr> {
     }
 
     if msg_len == 0 {
+      if self.map.has(&addr) {
+        dbg!(("reply from", addr));
+      }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
       match cmd {
         Cmd::Ping => {

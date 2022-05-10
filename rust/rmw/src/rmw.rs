@@ -44,12 +44,15 @@ impl Rmw {
     let mut buf: [u8; MTU] = unsafe { MaybeUninit::uninit().assume_init() };
     let (mut n, mut src);
     macro_rules! run {
-      ($addr:expr) => {
+      ($v:ident,$addr:expr) => {
         let send = Send::new(send, udp.try_clone()?, $addr);
         loop {
           (n, src) = udp.recv_from(&mut buf)?;
           if n > 0 {
-            send.send(&buf[..n], src).await;
+            match src {
+              SocketAddr::$v(src) => send.send(&buf[..n], src).await,
+              _ => {}
+            }
           }
         }
       };
@@ -60,23 +63,29 @@ impl Rmw {
         if cfg!(feature = "upnp") && config::get!(upnp / v4, true) {
           spawn(upnp::upnp_daemon("rmw", addr.port()));
         }
-        run!(config::get!(
-          boot / v4,
-          //54.177.127.37
-          vec![SocketAddrV4::new(Ipv4Addr::new(54, 177, 127, 37), 30110)]
-        ));
+        run!(
+          V4,
+          config::get!(
+            boot / v4,
+            //54.177.127.37
+            vec![SocketAddrV4::new(Ipv4Addr::new(54, 177, 127, 37), 30110)]
+          )
+        );
       }
       SocketAddr::V6(_) => {
-        run!(config::get!(
-          boot / v6,
-          vec![SocketAddrV6::new(
-            //  2600:1f1c:626:9200:7b9a:4420:876a:4550
-            Ipv6Addr::new(0x2600, 0x1f1c, 0x626, 0x9200, 0x7b9a, 0x4420, 0x876a, 0x4550),
-            30110,
-            0,
-            0
-          )]
-        ));
+        run!(
+          V6,
+          config::get!(
+            boot / v6,
+            vec![SocketAddrV6::new(
+              //  2600:1f1c:626:9200:7b9a:4420:876a:4550
+              Ipv6Addr::new(0x2600, 0x1f1c, 0x626, 0x9200, 0x7b9a, 0x4420, 0x876a, 0x4550),
+              30110,
+              0,
+              0
+            )]
+          )
+        );
       }
     };
   }
