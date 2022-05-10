@@ -5,7 +5,7 @@ use db::Db;
 use log::info;
 use std::{
   mem::MaybeUninit,
-  net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4, SocketAddrV6, UdpSocket},
+  net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4, SocketAddrV6, ToSocketAddrs, UdpSocket},
 };
 
 pub struct Rmw {
@@ -13,16 +13,20 @@ pub struct Rmw {
   pub db: Db,
 }
 
-pub async fn v4() -> Result<Rmw> {
-  let addr = config::get!(
-    udp / v4,
-    UdpSocket::bind("0.0.0.0:0").unwrap().local_addr().unwrap()
-  );
+fn rmw<Addr: ToSocketAddrs>(addr: Addr) -> Result<Rmw> {
   let udp = UdpSocket::bind(addr)?;
   Ok(Rmw {
     udp,
     db: db::open(dir::ROOT.clone().join("db/duck"))?,
   })
+}
+
+pub fn v4() -> Result<Rmw> {
+  let addr = config::get!(
+    udp / v4,
+    UdpSocket::bind("0.0.0.0:0").unwrap().local_addr().unwrap()
+  );
+  rmw(addr)
 }
 
 const MTU: usize = 1472;

@@ -6,7 +6,7 @@ fn main() -> Result<()> {
     .level_for("rmw", log::LevelFilter::Trace)
     .apply()?;
   block_on(async {
-    let rmw = rmwlib::rmw::v4().await?;
+    let rmw = rmwlib::rmw::v4()?;
     rmw.run().await?;
     Ok::<_, Error>(())
   })?;
