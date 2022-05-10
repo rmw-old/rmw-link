@@ -2,6 +2,7 @@
 members = [
   "rmw",
   "cli",
+  "keygen",
   "db",
   "dir",
   "config",

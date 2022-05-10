@@ -10,6 +10,7 @@ upnp = ["dep:upnp"]
 
 [dependencies]
 addrbytes = { path = "../addrbytes" }
+keygen = { path = "../keygen" }
 anyhow = "1.0.57"
 async-std = "1.11.0"
 config = { path = "../config" }

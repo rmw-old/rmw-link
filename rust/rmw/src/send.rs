@@ -3,6 +3,7 @@ use addrbytes::ToBytes;
 use async_std::{channel::Sender, task::spawn};
 use expire_map::ExpireMap;
 use std::net::UdpSocket;
+
 pub trait ToAddr = 'static
   + ToBytes
   + std::net::ToSocketAddrs
