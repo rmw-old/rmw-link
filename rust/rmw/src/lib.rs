@@ -3,7 +3,6 @@
 mod cmd;
 mod recv;
 mod req;
-mod rmw;
+pub mod rmw;
 mod send;
 mod typedef;
-pub use rmw::rmw;

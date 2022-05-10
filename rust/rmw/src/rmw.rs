@@ -13,7 +13,7 @@ pub struct Rmw {
   pub db: Db,
 }
 
-pub async fn rmw() -> Result<Rmw> {
+pub async fn v4() -> Result<Rmw> {
   let addr = config::get!(
     udp / v4,
     UdpSocket::bind("0.0.0.0:0").unwrap().local_addr().unwrap()
@@ -51,7 +51,7 @@ impl Rmw {
           match src {
             SocketAddr::$v(src) => send.send(&buf[..n], src).await,
             _ => {}
-          }
+          };
         }
       };
     }
