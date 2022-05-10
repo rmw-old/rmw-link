@@ -1392,14 +1392,17 @@ dependencies = [
  "const-str",
  "db",
  "dir",
+ "ed25519-dalek-blake3",
  "enum_dispatch",
  "err",
  "expire_map",
  "keygen",
+ "lazy_static",
  "log",
  "num_cpus",
  "num_enum",
  "speedy",
+ "twox-hash",
  "upnp",
 ]
 
@@ -1650,6 +1653,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d82e1a7758622a465f8cee077614c73484dac5b836c02ff6a40d5d1010324d7"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "twox-hash"
+version = "1.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97fee6b57c6a41524a810daee9286c02d7752c4253064d0b05472833a438f675"
+dependencies = [
+ "cfg-if",
+ "rand",
+ "static_assertions",
 ]
 
 [[package]]
