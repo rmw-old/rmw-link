@@ -48,10 +48,11 @@ impl<Addr: ToAddr> Send<Addr> {
         err::log(udp.send_to($bin, addr));
       }};
     }
+    println!("{addr} > {:?}", msg);
 
     if msg_len == 0 {
       if self.map.has(&addr) {
-        dbg!(("reply from", addr));
+        dbg!(("exist ", addr));
       }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
       match cmd {
