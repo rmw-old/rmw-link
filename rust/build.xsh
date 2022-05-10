@@ -36,6 +36,6 @@ strip @(out)
 
 ./sh/upx.sh
 
-upx --best --lzma @(out)
+#upx --best --lzma @(out)
 
 print(out)
