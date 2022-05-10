@@ -1,5 +1,4 @@
 use ed25519_dalek_blake3::{Keypair, SecretKey};
-use twox_hash::xxh3::hash128;
 
 fn keypair(seed: &[u8]) -> Keypair {
   let secret = SecretKey::from_bytes(seed).unwrap();
@@ -7,6 +6,15 @@ fn keypair(seed: &[u8]) -> Keypair {
   Keypair { public, secret }
 }
 
+pub fn new() -> Keypair {
+  keypair(&config::get!(sk, {
+    println!("首次运行，生成秘钥中，请稍等几分钟 ···");
+    let seed: Box<[u8]> = keygen::seed_new().into();
+    seed
+  }))
+}
+/*
+use twox_hash::xxh3::hash128;
 #[derive(Clone)]
 pub struct Key {
   pub ed25519: Keypair,
@@ -55,3 +63,4 @@ macro_rules! sk_addr_hash {
     crate::sk_hash!(&$addr.to_bytes(),$($i),*)
   }
 }
+*/

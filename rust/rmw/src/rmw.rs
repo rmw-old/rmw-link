@@ -1,7 +1,8 @@
-use crate::{key::Key, recv::Recv, send::Send};
+use crate::{key, recv::Recv, send::Send};
 use anyhow::Result;
 use async_std::{channel::unbounded, task::spawn};
 use db::Db;
+use ed25519_dalek_blake3::{Keypair, SecretKey};
 use log::info;
 use std::{
   mem::MaybeUninit,
@@ -11,6 +12,7 @@ use std::{
 pub struct Rmw {
   pub udp: UdpSocket,
   pub db: Db,
+  pub key: Keypair,
 }
 
 fn rmw<Addr: ToSocketAddrs>(addr: Addr) -> Result<Rmw> {
@@ -18,6 +20,7 @@ fn rmw<Addr: ToSocketAddrs>(addr: Addr) -> Result<Rmw> {
   Ok(Rmw {
     udp,
     db: db::open(dir::ROOT.clone().join("db/duck"))?,
+    key: key::new(),
   })
 }
 
