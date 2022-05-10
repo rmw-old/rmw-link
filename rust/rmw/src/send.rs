@@ -54,6 +54,7 @@ impl<Addr: ToAddr> Send<Addr> {
         dbg!(("exist ", addr));
       }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
+      dbg!(&cmd, &msg[1..]);
       match cmd {
         Cmd::Ping => {
           if msg_len == 1 {
