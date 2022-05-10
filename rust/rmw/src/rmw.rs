@@ -48,11 +48,9 @@ impl Rmw {
         let send = Send::new(send, udp.try_clone()?, $addr);
         loop {
           (n, src) = udp.recv_from(&mut buf)?;
-          if n > 0 {
-            match src {
-              SocketAddr::$v(src) => send.send(&buf[..n], src).await,
-              _ => {}
-            }
+          match src {
+            SocketAddr::$v(src) => send.send(&buf[..n], src).await,
+            _ => {}
           }
         }
       };
