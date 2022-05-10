@@ -18,18 +18,19 @@ pub struct Key {
 
 impl Key {
   pub fn new() -> Self {
+    let ed25519 = keypair(&config::get!(sk, {
+      println!("首次运行，生成秘钥中，请稍等几分钟 ···");
+      let seed: Box<[u8]> = keygen::seed_new().into();
+      seed
+    }));
     Self {
-      ed25519: keypair(&config::get!(sk, {
-        println!("首次运行，生成秘钥中，请稍等几分钟 ···");
-        let seed: Box<[u8]> = keygen::seed_new().into();
-        seed
-      })),
-      ed25519_pk: ED25519.public.as_bytes()[..keygen::PK_LEN]
+      ed25519,
+      ed25519_pk: ed25519.public.as_bytes()[..keygen::PK_LEN]
         .try_into()
         .unwrap(),
-      ed25519_sk_hash: hash128(ED25519.secret.as_bytes()).to_le_bytes(),
-      x25519_sk: (&ED25519.secret).into(),
-      x25519_pk: (&ED25519.public).into(),
+      ed25519_sk_hash: hash128(ed25519.secret.as_bytes()).to_le_bytes(),
+      x25519_sk: (&ed25519.secret).into(),
+      x25519_pk: (&ed25519.public).into(),
     }
   }
 }

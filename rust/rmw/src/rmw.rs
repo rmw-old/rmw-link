@@ -1,4 +1,4 @@
-use crate::{recv::Recv, send::Send};
+use crate::{key::Key, recv::Recv, send::Send};
 use anyhow::Result;
 use async_std::{channel::unbounded, task::spawn};
 use db::Db;
