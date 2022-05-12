@@ -1402,6 +1402,7 @@ dependencies = [
  "num_cpus",
  "num_enum",
  "speedy",
+ "time 0.1.0",
  "twox-hash",
  "upnp",
  "x25519-dalek",

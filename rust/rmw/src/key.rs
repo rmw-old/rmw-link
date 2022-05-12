@@ -1,9 +1,14 @@
 use ed25519_dalek_blake3::{Keypair, SecretKey};
+use twox_hash::xxh3::hash128;
 
 fn keypair(seed: &[u8]) -> Keypair {
   let secret = SecretKey::from_bytes(seed).unwrap();
   let public = (&secret).into();
   Keypair { public, secret }
+}
+
+pub fn hash128_bytes(data: &[u8]) -> [u8; 16] {
+  hash128(data).to_le_bytes()
 }
 
 pub fn new() -> Keypair {
@@ -14,7 +19,6 @@ pub fn new() -> Keypair {
   }))
 }
 /*
-use twox_hash::xxh3::hash128;
 #[derive(Clone)]
 pub struct Key {
   pub ed25519: Keypair,
@@ -36,16 +40,13 @@ impl Key {
       ed25519_pk: ed25519.public.as_bytes()[..keygen::PK_LEN]
         .try_into()
         .unwrap(),
-      ed25519_sk_hash: hash128(ed25519.secret.as_bytes()).to_le_bytes(),
+      ed25519_sk_hash: hash128(ed25519.secretas_bytes()).to_le_bytes(),
       x25519_sk: (&ed25519.secret).into(),
       x25519_pk: (&ed25519.public).into(),
     }
   }
 }
 
-pub fn hash128_bytes(data: &[u8]) -> [u8; 16] {
-  hash128(data).to_le_bytes()
-}
 
 #[macro_export]
 macro_rules! sk_hash {
