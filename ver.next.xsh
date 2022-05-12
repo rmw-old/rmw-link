@@ -7,11 +7,11 @@ from os.path import dirname,abspath
 PWD = dirname(abspath(__file__))
 cd @(PWD)
 
-VER = $(cat version)
+VER = $(cat ver)
 VER = list(map(int,VER.split('.')))
 VER[-1] += 1
 VER = '.'.join(tuple(map(str,VER)))
-echo @(VER) > version
+echo @(VER) > ver
 
 git add -u
 
