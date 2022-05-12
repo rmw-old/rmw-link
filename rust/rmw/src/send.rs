@@ -63,7 +63,7 @@ impl<Addr: ToAddr> Send<Addr> {
         reply!(ping_syn!(&self.sk_hash, addr, &self.pk))
       }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
-      info!("{:?} {:?} {}", addr, &cmd, &msg[1..].len());
+      println!("{:?} {:?} {}", addr, &cmd, &msg[1..].len());
       match cmd {
         Cmd::Ping => match msg_len {
           1 => reply!(&[]),
