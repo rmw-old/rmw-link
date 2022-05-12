@@ -49,6 +49,7 @@ impl<Addr: ToAddr> Send<Addr> {
 
   pub async fn send(&self, msg: &[u8], addr: Addr) {
     let msg_len = msg.len();
+    let addr = &addr;
     let udp = &self.udp;
 
     macro_rules! reply {
@@ -58,17 +59,17 @@ impl<Addr: ToAddr> Send<Addr> {
     }
 
     if msg_len == 0 {
-      if self.map.renew(&addr) {
-        reply!(ping_syn!(&self.sk_hash, &addr, &self.pk))
+      if self.map.renew(addr) {
+        info!("{:?} > ping reply", addr);
+        reply!(ping_syn!(&self.sk_hash, addr, &self.pk))
       }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
-      info!("{:?} {:?} {}", &addr, &cmd, &msg[1..].len());
+      info!("{:?} {:?} {}", addr, &cmd, &msg[1..].len());
       match cmd {
-        Cmd::Ping => {
-          if msg_len == 1 {
-            reply!(&[]);
-          }
-        }
+        Cmd::Ping => match msg_len {
+          1 => reply!(&[]),
+          _ => {}
+        },
       }
     }
   }
