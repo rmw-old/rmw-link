@@ -1,4 +1,5 @@
 use ed25519_dalek_blake3::{Keypair, SecretKey};
+use log::info;
 use twox_hash::xxh3::hash128;
 
 fn keypair(seed: &[u8]) -> Keypair {
@@ -23,8 +24,9 @@ macro_rules! hash128_bytes {
 
 pub fn new() -> Keypair {
   keypair(&config::get!(sk, {
-    println!("首次运行，生成秘钥中，请稍等几分钟 ···");
+    info!("首次运行，生成秘钥中，请稍等几分钟 ···");
     let seed: Box<[u8]> = keygen::seed_new().into();
+    info!("秘钥完成初始化");
     seed
   }))
 }
