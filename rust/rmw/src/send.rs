@@ -59,11 +59,11 @@ impl<Addr: ToAddr> Send<Addr> {
 
     if msg_len == 0 {
       if self.map.renew(addr) {
-        info!("{:?} > ping reply", addr);
+        println!("{:?} > ping reply", addr);
         reply!(ping_syn!(&self.sk_hash, addr, &self.pk))
       }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
-      println!("{:?} {:?} {}", addr, &cmd, &msg[1..].len());
+      println!("{:?} {:?} > {}", addr, &cmd, &msg[1..].len());
       match cmd {
         Cmd::Ping => match msg_len {
           1 => reply!(&[]),
