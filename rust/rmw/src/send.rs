@@ -1,5 +1,4 @@
 use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, req::Req, typedef::ToAddr};
-use addrbytes::ToBytes;
 use async_std::{channel::Sender, task::spawn};
 use ed25519_dalek_blake3::Keypair;
 use expire_map::ExpireMap;
@@ -47,14 +46,14 @@ impl<Addr: ToAddr> Send<Addr> {
     }
   }
 
-  pub async fn send(&self, msg: &[u8], addr: Addr) {
+  pub async fn send(&self, msg: &[u8], src: Addr) {
     let msg_len = msg.len();
-    let addr = &addr;
+    let addr = &src;
     let udp = &self.udp;
 
     macro_rules! reply {
       ($bin:expr) => {{
-        err::log(udp.send_to($bin, addr));
+        err::log(udp.send_to($bin, src));
       }};
     }
 
