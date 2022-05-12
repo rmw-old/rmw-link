@@ -11,6 +11,16 @@ pub fn hash128_bytes(data: &[u8]) -> [u8; 16] {
   hash128(data).to_le_bytes()
 }
 
+#[macro_export]
+macro_rules! hash128_bytes {
+  ($sk_hash:expr,$($i:expr),*) => {
+    {
+      use crate::key::{hash128_bytes};
+      &hash128_bytes(&[&$sk_hash[..], $($i),*].concat())[..]
+    }
+  };
+}
+
 pub fn new() -> Keypair {
   keypair(&config::get!(sk, {
     println!("首次运行，生成秘钥中，请稍等几分钟 ···");
@@ -47,16 +57,6 @@ impl Key {
   }
 }
 
-
-#[macro_export]
-macro_rules! sk_hash {
-  ($($i:expr),*) => {
-    {
-      use crate::crypto::{hash128_bytes,SK_HASH};
-      &hash128_bytes(&[&SK_HASH[..], $($i),*].concat())[..]
-    }
-  };
-}
 
 #[macro_export]
 macro_rules! sk_addr_hash {

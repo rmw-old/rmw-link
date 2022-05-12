@@ -1,7 +1,9 @@
-use crate::{cmd::Cmd, key::hash128_bytes, req::Req, typedef::ToAddr};
+use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, req::Req, typedef::ToAddr};
+use addrbytes::ToBytes;
 use async_std::{channel::Sender, task::spawn};
 use ed25519_dalek_blake3::Keypair;
 use expire_map::ExpireMap;
+use log::info;
 use std::net::UdpSocket;
 
 pub struct Send<Addr: ToAddr> {
@@ -9,11 +11,19 @@ pub struct Send<Addr: ToAddr> {
   pub udp: UdpSocket,
   pub map: ExpireMap<Addr, u8>,
   pub sk_hash: [u8; 16],
+  pub pk: [u8; keygen::PK_LEN],
 }
 
-macro_rules! ping {
-  () => {{
+macro_rules! ping_syn {
+  ($sk_hash:expr, $addr:expr, $pk:expr) => {{
     let now = time::sec().to_le_bytes();
+    &[
+      &[Cmd::Ping as u8][..],
+      hash128_bytes!($sk_hash, &$addr.to_bytes(), &now, $pk),
+      &now,
+      $pk,
+    ]
+    .concat()
   }};
 }
 
@@ -32,6 +42,7 @@ impl<Addr: ToAddr> Send<Addr> {
       udp,
       send,
       map,
+      pk: key.public.as_bytes()[..keygen::PK_LEN].try_into().unwrap(),
       sk_hash: hash128_bytes(key.secret.as_bytes()),
     }
   }
@@ -48,10 +59,10 @@ impl<Addr: ToAddr> Send<Addr> {
 
     if msg_len == 0 {
       if self.map.renew(&addr) {
-        dbg!("exist", addr);
+        reply!(ping_syn!(&self.sk_hash, &addr, &self.pk))
       }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
-      dbg!(&cmd, &msg[1..]);
+      info!("{:?} {:?} {}", &addr, &cmd, &msg[1..].len());
       match cmd {
         Cmd::Ping => {
           if msg_len == 1 {
