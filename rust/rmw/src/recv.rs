@@ -1,4 +1,4 @@
-use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, typedef::ToAddr};
+use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, pool::POOL, typedef::ToAddr};
 use async_std::task::spawn;
 use ed25519_dalek_blake3::Keypair;
 use expire_map::ExpireMap;
@@ -18,12 +18,14 @@ impl<Addr: ToAddr> Recv<Addr> {
     let map = ExpireMap::new(config::get!(net / timeout / ping, 7u8), 60);
     let u = udp.try_clone().unwrap();
     let m = map.clone();
-    spawn(async move {
+
+    POOL.spawn(move || {
       for addr in boot {
         m.add(addr);
         err::log(u.send_to(&[Cmd::Ping as u8], addr));
       }
     });
+
     Self {
       udp,
       map,
