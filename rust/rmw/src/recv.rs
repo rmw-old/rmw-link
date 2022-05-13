@@ -8,10 +8,11 @@ pub struct Recv<Addr: ToAddr> {
   pub map: ExpireMap<Addr, u8>,
   pub sk_hash: [u8; 16],
   pub pk: [u8; keygen::PK_LEN],
+  pub key: Keypair,
 }
 
 impl<Addr: ToAddr> Recv<Addr> {
-  pub fn new(key: &Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
+  pub fn new(key: Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
     let map = ExpireMap::new(config::get!(net / timeout / ping, 7u8), 60);
     {
       let udp = udp.try_clone().unwrap();
@@ -27,6 +28,7 @@ impl<Addr: ToAddr> Recv<Addr> {
     Self {
       udp,
       map,
+      key,
       pk: key.public.as_bytes()[..keygen::PK_LEN].try_into().unwrap(),
       sk_hash: hash128_bytes(key.secret.as_bytes()),
     }

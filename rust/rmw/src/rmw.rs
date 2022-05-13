@@ -44,7 +44,7 @@ impl Rmw {
     let (mut n, mut src);
     macro_rules! run {
       ($v:ident,$addr:expr) => {
-        let recv = Recv::new(&self.key, udp.try_clone()?, $addr);
+        let recv = Recv::new(self.key.clone(), udp.try_clone()?, $addr);
 
         loop {
           (n, src) = udp.recv_from(&mut buf)?;
