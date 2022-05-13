@@ -1,8 +1,8 @@
 use crate::{key, recv::Recv};
 use anyhow::Result;
-use async_std::{channel::unbounded, task::spawn};
+use async_std::task::spawn;
 use db::Db;
-use ed25519_dalek_blake3::{Keypair, SecretKey};
+use ed25519_dalek_blake3::Keypair;
 use log::info;
 use std::{
   mem::MaybeUninit,

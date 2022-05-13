@@ -13,16 +13,17 @@ pub struct Recv<Addr: ToAddr> {
 impl<Addr: ToAddr> Recv<Addr> {
   pub fn new(key: &Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
     let map = ExpireMap::new(config::get!(net / timeout / ping, 7u8), 60);
-    let u = udp.try_clone().unwrap();
-    let m = map.clone();
+    {
+      let udp = udp.try_clone().unwrap();
+      let map = map.clone();
 
-    POOL.spawn(move || {
-      for addr in boot {
-        m.add(addr);
-        err::log(u.send_to(&[Cmd::Ping as u8], addr));
-      }
-    });
-
+      POOL.spawn(move || {
+        for addr in boot {
+          map.add(addr);
+          err::log(udp.send_to(&[Cmd::Ping as u8], addr));
+        }
+      });
+    }
     Self {
       udp,
       map,
