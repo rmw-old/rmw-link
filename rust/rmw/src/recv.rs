@@ -56,12 +56,7 @@ impl<Addr: ToAddr> Recv<Addr> {
         println!("{} > ping reply", addr);
         let now = time::sec().to_le_bytes();
         let pk = &self.pk;
-        reply!(
-          Cmd::Ping,
-          hash128_bytes!(&self.sk_hash, &now, &addr.to_bytes(), pk),
-          &now,
-          pk
-        )
+        reply!(Cmd::Ping, &self.sk_hash(&now, addr, pk), &now, pk)
       }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
       println!("{} {:?} > {}", addr, &cmd, &msg.len());
@@ -73,11 +68,18 @@ impl<Addr: ToAddr> Recv<Addr> {
             reply!(
               Cmd::Ping,
               &msg[1..25],
-              hash128_bytes!(&self.sk_hash, &now, &addr.to_bytes(), &msg[25..]),
+              &self.sk_hash(&now, addr, &msg[25..]),
               &now
             )
           }
           49 => {
+            let hash: [u8; 16] = msg[1..17].try_into().unwrap();
+            if self.sk_hash(&msg[17..25], addr, &self.pk) == hash {
+              todo!("reply")
+            }
+
+            //hash128_bytes!(&self.sk_hash, &now, &addr.to_bytes(), pk)
+
             //send!(PingPk)
             /*
             reply!(Cmd::Ping,
@@ -90,5 +92,8 @@ impl<Addr: ToAddr> Recv<Addr> {
         },
       }
     }
+  }
+  pub fn sk_hash(&self, now: &[u8], addr: &Addr, msg: &[u8]) -> [u8; 16] {
+    hash128_bytes!(&self.sk_hash, now, &addr.to_bytes(), msg)
   }
 }

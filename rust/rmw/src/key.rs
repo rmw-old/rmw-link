@@ -17,7 +17,7 @@ macro_rules! hash128_bytes {
   ($sk_hash:expr,$($i:expr),*) => {
     {
       use crate::key::{hash128_bytes};
-      &hash128_bytes(&[&$sk_hash[..], $($i),*].concat())[..]
+      hash128_bytes(&[&$sk_hash[..], $($i),*].concat())
     }
   };
 }
