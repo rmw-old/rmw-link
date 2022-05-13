@@ -16,8 +16,8 @@ pub enum Req<Addr: ToAddr> {
 
 #[derive(PartialEq, Debug, Readable, Writable)]
 pub struct Recv<Addr: ToAddr> {
-  msg: Box<[u8]>,
-  src: Addr,
+  pub msg: Box<[u8]>,
+  pub src: Addr,
 }
 
 /*

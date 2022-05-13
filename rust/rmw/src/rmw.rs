@@ -39,20 +39,19 @@ impl Rmw {
     let udp = &self.udp;
     let addr = udp.local_addr()?;
     info!("udp://{:?}", addr);
-    let (send, recv) = unbounded();
-
-    let recv = Recv {
-      udp: udp.try_clone()?,
-      recv,
-    };
-
-    spawn(async move { recv.recv().await });
 
     let mut buf: [u8; MTU] = unsafe { MaybeUninit::uninit().assume_init() };
     let (mut n, mut src);
     macro_rules! run {
       ($v:ident,$addr:expr) => {
+        let (send, recv) = unbounded();
         let send = Send::new(send, &self.key, udp.try_clone()?, $addr);
+        let recv = Recv {
+          udp: udp.try_clone()?,
+          recv,
+        };
+        spawn(async move { recv.recv().await });
+
         loop {
           (n, src) = udp.recv_from(&mut buf)?;
           match src {
@@ -64,19 +63,6 @@ impl Rmw {
     }
 
     match addr {
-      SocketAddr::V4(_) => {
-        if cfg!(feature = "upnp") && config::get!(upnp / v4, true) {
-          spawn(upnp::upnp_daemon("rmw", addr.port()));
-        }
-        run!(
-          V4,
-          config::get!(
-            boot / v4,
-            //54.177.127.37
-            vec![SocketAddrV4::new(Ipv4Addr::new(54, 177, 127, 37), 4910)]
-          )
-        );
-      }
       SocketAddr::V6(_) => {
         run!(
           V6,
@@ -89,6 +75,19 @@ impl Rmw {
               0,
               0
             )]
+          )
+        );
+      }
+      SocketAddr::V4(_) => {
+        if cfg!(feature = "upnp") && config::get!(upnp / v4, true) {
+          spawn(upnp::upnp_daemon("rmw", addr.port()));
+        }
+        run!(
+          V4,
+          config::get!(
+            boot / v4,
+            //54.177.127.37
+            vec![SocketAddrV4::new(Ipv4Addr::new(54, 177, 127, 37), 4910)]
           )
         );
       }
