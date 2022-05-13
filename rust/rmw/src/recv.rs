@@ -1,14 +1,13 @@
 use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, pool::POOL, typedef::ToAddr};
-use ed25519_dalek_blake3::Keypair;
+use ed25519_dalek_blake3::{Keypair, Signer};
 use expire_map::ExpireMap;
 use std::net::UdpSocket;
 
 pub struct Recv<Addr: ToAddr> {
   pub udp: UdpSocket,
   pub map: ExpireMap<Addr, u8>,
-  pub sk_hash: [u8; 16],
-  pub pk: [u8; keygen::PK_LEN],
   pub key: Keypair,
+  pub sk_hash: [u8; 16],
 }
 
 impl<Addr: ToAddr> Recv<Addr> {
@@ -28,10 +27,13 @@ impl<Addr: ToAddr> Recv<Addr> {
     Self {
       udp,
       map,
-      key,
-      pk: key.public.as_bytes()[..keygen::PK_LEN].try_into().unwrap(),
       sk_hash: hash128_bytes(key.secret.as_bytes()),
+      key,
     }
+  }
+
+  fn pk(&self) -> &[u8] {
+    &self.key.public.as_bytes()[..keygen::PK_LEN]
   }
 
   pub fn recv(&self, msg: &[u8], src: Addr) {
@@ -57,7 +59,7 @@ impl<Addr: ToAddr> Recv<Addr> {
       if self.map.renew(addr) {
         println!("{} > ping reply", addr);
         let now = time::sec().to_le_bytes();
-        let pk = &self.pk;
+        let pk = &self.pk();
         reply!(Cmd::Ping, &self.sk_hash(&now, addr, pk), &now, pk)
       }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
@@ -76,16 +78,24 @@ impl<Addr: ToAddr> Recv<Addr> {
           }
           49 => {
             let hash: [u8; 16] = msg[1..17].try_into().unwrap();
-            if self.sk_hash(&msg[17..25], addr, &self.pk) == hash {
+            if self.sk_hash(&msg[17..25], addr, &self.pk()) == hash {
               {
                 let udp = self.udp.try_clone().unwrap();
                 let key = self.key.clone();
                 let time_hash: [u8; 24] = msg[25..].try_into().unwrap();
                 POOL.spawn(move || {
-                  err::log(udp.send_to(
-                    &[&[Cmd::Ping as u8][..], &time_hash, &key.PublicKey].concat(),
-                    src,
-                  ));
+                  err::log(
+                    udp.send_to(
+                      &[
+                        &[Cmd::Ping as u8][..],
+                        &time_hash,
+                        &key.public.as_bytes()[..keygen::PK_LEN],
+                        &key.sign(&time_hash).to_bytes(),
+                      ]
+                      .concat(),
+                      src,
+                    ),
+                  );
                 });
               }
             }
