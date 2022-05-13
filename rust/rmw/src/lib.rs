@@ -2,7 +2,7 @@
 
 mod cmd;
 mod key;
+mod recv;
 pub mod rmw;
-mod send;
 mod typedef;
 mod util;

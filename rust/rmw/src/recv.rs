@@ -1,18 +1,18 @@
 use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, typedef::ToAddr};
-use async_std::{channel::Sender, task::spawn};
+use async_std::task::spawn;
 use ed25519_dalek_blake3::Keypair;
 use expire_map::ExpireMap;
 use log::info;
 use std::net::UdpSocket;
 
-pub struct Send<Addr: ToAddr> {
+pub struct Recv<Addr: ToAddr> {
   pub udp: UdpSocket,
   pub map: ExpireMap<Addr, u8>,
   pub sk_hash: [u8; 16],
   pub pk: [u8; keygen::PK_LEN],
 }
 
-impl<Addr: ToAddr> Send<Addr> {
+impl<Addr: ToAddr> Recv<Addr> {
   pub fn new(key: &Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
     let map = ExpireMap::new(config::get!(net / timeout / ping, 7u8), 60);
     let u = udp.try_clone().unwrap();
@@ -31,7 +31,7 @@ impl<Addr: ToAddr> Send<Addr> {
     }
   }
 
-  pub async fn send(&self, msg: &[u8], src: Addr) {
+  pub fn recv(&self, msg: &[u8], src: Addr) {
     let msg_len = msg.len();
     let addr = &src;
     let udp = &self.udp;
@@ -43,8 +43,8 @@ impl<Addr: ToAddr> Send<Addr> {
       ($cmd:expr,$($bin:expr),*) => {{
         reply!(
           &[
-            &[$cmd as u8][..],
-            $($bin),*
+          &[$cmd as u8][..],
+          $($bin),*
           ].concat()
         )
       }};
@@ -80,7 +80,7 @@ impl<Addr: ToAddr> Send<Addr> {
             //send!(PingPk)
             /*
             reply!(Cmd::Ping,
-              &self.pk
+            &self.pk
             )
             */
             //reply!(ping_pk!(&self.pk, addr, msg));
