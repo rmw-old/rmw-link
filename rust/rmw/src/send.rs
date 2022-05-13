@@ -13,14 +13,29 @@ pub struct Send<Addr: ToAddr> {
   pub pk: [u8; keygen::PK_LEN],
 }
 
+const PING: [u8; 1] = [Cmd::Ping as u8];
+
 macro_rules! ping_syn {
   ($sk_hash:expr, $addr:expr, $pk:expr) => {{
     let now = time::sec().to_le_bytes();
     &[
-      &[Cmd::Ping as u8][..],
-      hash128_bytes!($sk_hash, &$addr.to_bytes(), &now, $pk),
+      &PING[..],
+      hash128_bytes!($sk_hash, &now, &$addr.to_bytes(), $pk),
       &now,
       $pk,
+    ]
+    .concat()
+  }};
+}
+
+macro_rules! ping_ack {
+  ($sk_hash:expr, $addr:expr, $msg:expr) => {{
+    let now = time::sec().to_le_bytes();
+    &[
+      &PING[..],
+      &now,
+      hash128_bytes!($sk_hash, &now, &$addr.to_bytes(), &$msg[25..]),
+      &$msg[1..25],
     ]
     .concat()
   }};
@@ -63,11 +78,13 @@ impl<Addr: ToAddr> Send<Addr> {
         reply!(ping_syn!(&self.sk_hash, addr, &self.pk))
       }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
-      println!("{} {:?} > {}", addr, &cmd, &msg[1..].len());
+      println!("{} {:?} > {}", addr, &cmd, &msg.len());
       match cmd {
         Cmd::Ping => match msg_len {
           1 => reply!(&[]),
-          55 => {}
+          55 => {
+            reply!(ping_ack!(&self.sk_hash, addr, msg));
+          }
           _ => {}
         },
       }
