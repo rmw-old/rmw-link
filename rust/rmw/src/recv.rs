@@ -10,6 +10,12 @@ pub struct Recv<Addr: ToAddr> {
   pub sk_hash: [u8; 16],
 }
 
+macro_rules! pk {
+  ($key:expr) => {
+    &$key.public.as_bytes()[..keygen::PK_LEN]
+  };
+}
+
 impl<Addr: ToAddr> Recv<Addr> {
   pub fn new(key: Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
     let map = ExpireMap::new(config::get!(net / timeout / ping, 7u8), 60);
@@ -33,7 +39,7 @@ impl<Addr: ToAddr> Recv<Addr> {
   }
 
   fn pk(&self) -> &[u8] {
-    &self.key.public.as_bytes()[..keygen::PK_LEN]
+    pk!(self.key)
   }
 
   pub fn recv(&self, msg: &[u8], src: Addr) {
@@ -89,7 +95,7 @@ impl<Addr: ToAddr> Recv<Addr> {
                       &[
                         &[Cmd::Ping as u8][..],
                         &time_hash,
-                        &key.public.as_bytes()[..keygen::PK_LEN],
+                        pk!(key),
                         &key.sign(&time_hash).to_bytes(),
                       ]
                       .concat(),
