@@ -33,11 +33,17 @@ macro_rules! ping_ack {
     let now = time::sec().to_le_bytes();
     &[
       &PING[..],
-      &now,
-      hash128_bytes!($sk_hash, &now, &$addr.to_bytes(), &$msg[25..]),
       &$msg[1..25],
+      hash128_bytes!($sk_hash, &now, &$addr.to_bytes(), &$msg[25..]),
+      &now,
     ]
     .concat()
+  }};
+}
+
+macro_rules! ping_pk {
+  ($addr:expr, $msg:expr) => {{
+    &[&PING[..]].concat()
   }};
 }
 
@@ -84,6 +90,9 @@ impl<Addr: ToAddr> Send<Addr> {
           1 => reply!(&[]),
           55 => {
             reply!(ping_ack!(&self.sk_hash, addr, msg));
+          }
+          49 => {
+            reply!(ping_pk!(addr, msg));
           }
           _ => {}
         },
