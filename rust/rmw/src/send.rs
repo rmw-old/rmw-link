@@ -1,4 +1,10 @@
-use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, req::Req, typedef::ToAddr};
+use crate::{
+  cmd::Cmd,
+  hash128_bytes,
+  key::hash128_bytes,
+  req::{Ping, Req},
+  typedef::ToAddr,
+};
 use async_std::{channel::Sender, task::spawn};
 use ed25519_dalek_blake3::Keypair;
 use expire_map::ExpireMap;
@@ -6,49 +12,15 @@ use log::info;
 use std::net::UdpSocket;
 
 pub struct Send<Addr: ToAddr> {
-  pub send: Sender<Req>,
+  pub sender: Sender<Req>,
   pub udp: UdpSocket,
   pub map: ExpireMap<Addr, u8>,
   pub sk_hash: [u8; 16],
   pub pk: [u8; keygen::PK_LEN],
 }
 
-const PING: [u8; 1] = [Cmd::Ping as u8];
-
-macro_rules! ping_syn {
-  ($sk_hash:expr, $addr:expr, $pk:expr) => {{
-    let now = time::sec().to_le_bytes();
-    &[
-      &PING[..],
-      hash128_bytes!($sk_hash, &now, &$addr.to_bytes(), $pk),
-      &now,
-      $pk,
-    ]
-    .concat()
-  }};
-}
-
-macro_rules! ping_ack {
-  ($sk_hash:expr, $addr:expr, $msg:expr) => {{
-    let now = time::sec().to_le_bytes();
-    &[
-      &PING[..],
-      &$msg[1..25],
-      hash128_bytes!($sk_hash, &now, &$addr.to_bytes(), &$msg[25..]),
-      &now,
-    ]
-    .concat()
-  }};
-}
-
-macro_rules! ping_pk {
-  ($addr:expr, $msg:expr) => {{
-    &[&PING[..]].concat()
-  }};
-}
-
 impl<Addr: ToAddr> Send<Addr> {
-  pub fn new(send: Sender<Req>, key: &Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
+  pub fn new(sender: Sender<Req>, key: &Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
     let map = ExpireMap::new(config::get!(net / timeout / ping, 7u8), 60);
     let u = udp.try_clone().unwrap();
     let m = map.clone();
@@ -60,7 +32,7 @@ impl<Addr: ToAddr> Send<Addr> {
     });
     Self {
       udp,
-      send,
+      sender,
       map,
       pk: key.public.as_bytes()[..keygen::PK_LEN].try_into().unwrap(),
       sk_hash: hash128_bytes(key.secret.as_bytes()),
@@ -76,12 +48,27 @@ impl<Addr: ToAddr> Send<Addr> {
       ($bin:expr) => {{
         err::log(udp.send_to($bin, src));
       }};
+      ($cmd:expr,$($bin:expr),*) => {{
+        reply!(
+          &[
+            &[$cmd as u8][..],
+            $($bin),*
+          ].concat()
+        )
+      }};
     }
 
     if msg_len == 0 {
       if self.map.renew(addr) {
         println!("{} > ping reply", addr);
-        reply!(ping_syn!(&self.sk_hash, addr, &self.pk))
+        let now = time::sec().to_le_bytes();
+        let pk = &self.pk;
+        reply!(
+          Cmd::Ping,
+          hash128_bytes!(&self.sk_hash, &now, &addr.to_bytes(), pk),
+          &now,
+          pk
+        )
       }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
       println!("{} {:?} > {}", addr, &cmd, &msg.len());
@@ -89,10 +76,22 @@ impl<Addr: ToAddr> Send<Addr> {
         Cmd::Ping => match msg_len {
           1 => reply!(&[]),
           55 => {
-            reply!(ping_ack!(&self.sk_hash, addr, msg));
+            let now = time::sec().to_le_bytes();
+            reply!(
+              Cmd::Ping,
+              &msg[1..25],
+              hash128_bytes!(&self.sk_hash, &now, &addr.to_bytes(), &msg[25..]),
+              &now
+            )
           }
           49 => {
-            reply!(ping_pk!(addr, msg));
+            self.sender.send(Req::Ping(Ping {}));
+            /*
+            reply!(Cmd::Ping,
+              &self.pk
+            )
+            */
+            //reply!(ping_pk!(&self.pk, addr, msg));
           }
           _ => {}
         },
