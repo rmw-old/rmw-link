@@ -99,7 +99,7 @@ impl<Addr: ToAddr> Send<Addr> {
             )
           }
           49 => {
-            send!(Ping)
+            send!(PingPk)
             /*
             reply!(Cmd::Ping,
               &self.pk
