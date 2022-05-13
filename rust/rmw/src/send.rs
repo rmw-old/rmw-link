@@ -2,7 +2,7 @@ use crate::{
   cmd::Cmd,
   hash128_bytes,
   key::hash128_bytes,
-  req::{Ping, Req},
+  req::{Recv, Req},
   typedef::ToAddr,
 };
 use async_std::{channel::Sender, task::spawn};
@@ -12,7 +12,7 @@ use log::info;
 use std::net::UdpSocket;
 
 pub struct Send<Addr: ToAddr> {
-  pub sender: Sender<Req>,
+  pub sender: Sender<Req<Addr>>,
   pub udp: UdpSocket,
   pub map: ExpireMap<Addr, u8>,
   pub sk_hash: [u8; 16],
@@ -20,7 +20,7 @@ pub struct Send<Addr: ToAddr> {
 }
 
 impl<Addr: ToAddr> Send<Addr> {
-  pub fn new(sender: Sender<Req>, key: &Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
+  pub fn new(sender: Sender<Req<Addr>>, key: &Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
     let map = ExpireMap::new(config::get!(net / timeout / ping, 7u8), 60);
     let u = udp.try_clone().unwrap();
     let m = map.clone();
@@ -85,7 +85,10 @@ impl<Addr: ToAddr> Send<Addr> {
             )
           }
           49 => {
-            self.sender.send(Req::Ping(Ping {}));
+            self.sender.send(Req::Ping(Recv {
+              src,
+              msg: Box::from(&msg[1..]),
+            }));
             /*
             reply!(Cmd::Ping,
               &self.pk
