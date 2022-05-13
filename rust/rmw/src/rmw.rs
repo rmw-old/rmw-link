@@ -1,4 +1,4 @@
-use crate::{key, recv::Recv, send::Send};
+use crate::{key, send::Send};
 use anyhow::Result;
 use async_std::{channel::unbounded, task::spawn};
 use db::Db;
@@ -44,13 +44,7 @@ impl Rmw {
     let (mut n, mut src);
     macro_rules! run {
       ($v:ident,$addr:expr) => {
-        let (send, recv) = unbounded();
-        let send = Send::new(send, &self.key, udp.try_clone()?, $addr);
-        let recv = Recv {
-          udp: udp.try_clone()?,
-          recv,
-        };
-        spawn(async move { recv.recv().await });
+        let send = Send::new(&self.key, udp.try_clone()?, $addr);
 
         loop {
           (n, src) = udp.recv_from(&mut buf)?;

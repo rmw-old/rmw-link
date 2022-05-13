@@ -1,10 +1,4 @@
-use crate::{
-  cmd::Cmd,
-  hash128_bytes,
-  key::hash128_bytes,
-  req::{Recv, Req},
-  typedef::ToAddr,
-};
+use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, typedef::ToAddr};
 use async_std::{channel::Sender, task::spawn};
 use ed25519_dalek_blake3::Keypair;
 use expire_map::ExpireMap;
@@ -12,7 +6,6 @@ use log::info;
 use std::net::UdpSocket;
 
 pub struct Send<Addr: ToAddr> {
-  pub sender: Sender<Req<Addr>>,
   pub udp: UdpSocket,
   pub map: ExpireMap<Addr, u8>,
   pub sk_hash: [u8; 16],
@@ -20,7 +13,7 @@ pub struct Send<Addr: ToAddr> {
 }
 
 impl<Addr: ToAddr> Send<Addr> {
-  pub fn new(sender: Sender<Req<Addr>>, key: &Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
+  pub fn new(key: &Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
     let map = ExpireMap::new(config::get!(net / timeout / ping, 7u8), 60);
     let u = udp.try_clone().unwrap();
     let m = map.clone();
@@ -32,7 +25,6 @@ impl<Addr: ToAddr> Send<Addr> {
     });
     Self {
       udp,
-      sender,
       map,
       pk: key.public.as_bytes()[..keygen::PK_LEN].try_into().unwrap(),
       sk_hash: hash128_bytes(key.secret.as_bytes()),
@@ -43,20 +35,6 @@ impl<Addr: ToAddr> Send<Addr> {
     let msg_len = msg.len();
     let addr = &src;
     let udp = &self.udp;
-
-    macro_rules! send {
-      ($cmd:ident) => {{
-        err::log(
-          self
-            .sender
-            .send(Req::$cmd(Recv {
-              src,
-              msg: Box::from(&msg[1..]),
-            }))
-            .await,
-        );
-      }};
-    }
 
     macro_rules! reply {
       ($bin:expr) => {{
@@ -99,7 +77,7 @@ impl<Addr: ToAddr> Send<Addr> {
             )
           }
           49 => {
-            send!(PingPk)
+            //send!(PingPk)
             /*
             reply!(Cmd::Ping,
               &self.pk
