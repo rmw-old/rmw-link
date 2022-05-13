@@ -44,6 +44,20 @@ impl<Addr: ToAddr> Send<Addr> {
     let addr = &src;
     let udp = &self.udp;
 
+    macro_rules! send {
+      ($cmd:ident) => {{
+        err::log(
+          self
+            .sender
+            .send(Req::$cmd(Recv {
+              src,
+              msg: Box::from(&msg[1..]),
+            }))
+            .await,
+        );
+      }};
+    }
+
     macro_rules! reply {
       ($bin:expr) => {{
         err::log(udp.send_to($bin, src));
@@ -85,10 +99,7 @@ impl<Addr: ToAddr> Send<Addr> {
             )
           }
           49 => {
-            self.sender.send(Req::Ping(Recv {
-              src,
-              msg: Box::from(&msg[1..]),
-            }));
+            send!(Ping)
             /*
             reply!(Cmd::Ping,
               &self.pk
