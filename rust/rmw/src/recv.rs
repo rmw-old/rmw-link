@@ -79,9 +79,13 @@ impl<Addr: ToAddr> Recv<Addr> {
             if self.sk_hash(&msg[17..25], addr, &self.pk) == hash {
               {
                 let udp = self.udp.try_clone().unwrap();
+                let key = self.key.clone();
                 let time_hash: [u8; 24] = msg[25..].try_into().unwrap();
                 POOL.spawn(move || {
-                  err::log(udp.send_to(&[&[Cmd::Ping as u8][..], &time_hash].concat(), src));
+                  err::log(udp.send_to(
+                    &[&[Cmd::Ping as u8][..], &time_hash, &key.PublicKey].concat(),
+                    src,
+                  ));
                 });
               }
             }
