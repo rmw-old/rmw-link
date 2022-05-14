@@ -39,6 +39,7 @@ jobs:
       - name: build
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
+          rm -rf /usr/bin/upx
           ./docker/build.sh
 
       - uses: actions/upload-artifact@v3
