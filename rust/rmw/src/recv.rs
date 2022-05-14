@@ -123,8 +123,8 @@ impl<Addr: ToAddr> Recv<Addr> {
           msg_len if msg_len >= 119 => {
             let udp = self.udp.try_clone().unwrap();
             let rpk: [u8; 30] = msg[1..31].try_into().unwrap();
-            let sign: [u8; 64] = msg[31..31 + 64].try_into().unwrap();
-            let time_hash_token = &msg[1 + 30 + 64..];
+            let sign: [u8; 64] = msg[31..31 + 64 + 1].try_into().unwrap();
+            let time_hash_token = &msg[31 + 64 + 1..];
             let hash: [u8; 16] = time_hash_token[..16].try_into().unwrap();
             let time_bytes = time_hash_token[16..25].try_into().unwrap();
             let key = self.key.clone();
