@@ -135,10 +135,10 @@ impl<Addr: ToAddr> Recv<Addr> {
               let now = sec();
               let time = u64::from_le_bytes(time_bytes);
               let pk = pk!(key);
-              dbg!(time <= now);
-              dbg!((now - time) <= expire);
-              dbg!(sk_hash(&sk, &time_bytes, &src, pk) == hash);
-              dbg!(hash_token.leading_zeros() >= PING_TOKEN_LEADING_ZERO);
+              println!("{}", time <= now);
+              println!("{}", (now - time) <= expire);
+              println!("{}", sk_hash(&sk, &time_bytes, &src, pk) == hash);
+              println!("{}", hash_token.leading_zeros() >= PING_TOKEN_LEADING_ZERO);
               if (time <= now)
                 && ((now - time) <= expire)
                 && (sk_hash(&sk, &time_bytes, &src, pk) == hash)
