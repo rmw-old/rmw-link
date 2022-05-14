@@ -84,6 +84,8 @@ impl<Addr: ToAddr> Recv<Addr> {
               let key = self.key.clone();
               let time_hash: [u8; 24] = msg[1..].try_into().unwrap();
               POOL.spawn(move || {
+                let token = crate::util::leading_zero::find(8, &time_hash);
+
                 err::log(
                   udp.send_to(
                     &[

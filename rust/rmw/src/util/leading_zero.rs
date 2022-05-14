@@ -1,11 +1,14 @@
-pub fn find<Hash: Fn(&[u8]) -> u64>(n: u32, v: &[u8], hash: Hash) -> Vec<u8> {
+use twox_hash::xxh3::hash64;
+
+//pub fn find<Hash: Fn(&[u8]) -> u64>(n: u32, v: &[u8], hash: Hash) -> Vec<u8> {
+pub fn find(n: u32, v: &[u8]) -> Vec<u8> {
   let mut token = vec![];
   let vec = v.to_vec();
   loop {
     let mut txt = vec.clone();
     txt.extend(&token[..]);
 
-    let h = hash(&txt);
+    let h = hash64(&txt);
     if h.leading_zeros() >= n {
       return token;
     }
