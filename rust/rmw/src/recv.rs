@@ -145,6 +145,8 @@ impl<Addr: ToAddr> Recv<Addr> {
                 {
                   let xpk: X25519PublicKey = (&rpk).into();
                   let xsecret = secret.diffie_hellman(&xpk);
+
+                  // 记录 src xsecret
                   send_to(
                     &udp,
                     &[
