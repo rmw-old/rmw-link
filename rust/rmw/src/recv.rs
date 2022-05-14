@@ -122,14 +122,10 @@ impl<Addr: ToAddr> Recv<Addr> {
           msg_len if msg_len >= 119 => {
             let udp = self.udp.try_clone().unwrap();
             let rpk: [u8; 30] = msg[1..31].try_into().unwrap();
-            println!(">> {}", 3);
             let sign: [u8; 64] = msg[31..95].try_into().unwrap();
-            println!(">> {}", 4);
             let time_hash_token = &msg[95..];
             let hash: [u8; 16] = time_hash_token[..16].try_into().unwrap();
-            println!(">> {}", 5);
             let time_bytes = time_hash_token[16..24].try_into().unwrap();
-            println!(">> {}", 6);
             let key = self.key.clone();
             let hash_token = hash64(&time_hash_token);
             let expire = self.expire as _;
@@ -139,6 +135,10 @@ impl<Addr: ToAddr> Recv<Addr> {
               let now = sec();
               let time = u64::from_le_bytes(time_bytes);
               let pk = pk!(key);
+              dbg!(time <= now);
+              dbg!((now - time) <= expire);
+              dbg!(sk_hash(&sk, &time_bytes, &src, pk) == hash);
+              dbg!(hash_token.leading_zeros() >= PING_TOKEN_LEADING_ZERO);
               if (time <= now)
                 && ((now - time) <= expire)
                 && (sk_hash(&sk, &time_bytes, &src, pk) == hash)
