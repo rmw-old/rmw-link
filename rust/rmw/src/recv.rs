@@ -1,4 +1,4 @@
-use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, pool::POOL, typedef::ToAddr};
+use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, pool::spawn, typedef::ToAddr};
 use ed25519_dalek_blake3::{Keypair, Signer};
 use expire_map::ExpireMap;
 use std::net::UdpSocket;
@@ -18,12 +18,12 @@ macro_rules! pk {
 
 impl<Addr: ToAddr> Recv<Addr> {
   pub fn new(key: Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
-    let map = ExpireMap::new(config::get!(net / timeout / ping, 7u8), 60);
+    let map = ExpireMap::new(config::get!(net / timeout / ping, 21u8), 60);
     {
       let udp = udp.try_clone().unwrap();
       let map = map.clone();
 
-      POOL.spawn(move || {
+      spawn(move || {
         for addr in boot {
           map.add(addr);
           err::log(udp.send_to(&[Cmd::Ping as u8], addr));
@@ -62,7 +62,7 @@ impl<Addr: ToAddr> Recv<Addr> {
     }
 
     if msg_len == 0 {
-      if self.map.renew(addr) {
+      if self.map.has(addr) {
         println!("{} > ping reply", addr);
         reply!(Cmd::Ping, &self.pk(), &time::sec().to_le_bytes())
       }
@@ -79,11 +79,11 @@ impl<Addr: ToAddr> Recv<Addr> {
             }
           }
           25 => {
-            if self.map.renew(addr) {
+            if self.map.has(addr) {
               let udp = self.udp.try_clone().unwrap();
               let key = self.key.clone();
               let time_hash: [u8; 24] = msg[1..].try_into().unwrap();
-              POOL.spawn(move || {
+              spawn(move || {
                 err::log(
                   udp.send_to(
                     &[
