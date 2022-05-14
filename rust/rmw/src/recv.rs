@@ -123,10 +123,9 @@ impl<Addr: ToAddr> Recv<Addr> {
             let udp = self.udp.try_clone().unwrap();
             let rpk: [u8; 30] = msg[1..31].try_into().unwrap();
             let sign: [u8; 64] = msg[31..95].try_into().unwrap();
-            let hash_time_token = &msg[95..];
-            let hash_time: [u8; 24] = hash_time_token[..24].try_into().unwrap();
+            let hash_time: [u8; 24] = msg[95..119].try_into().unwrap();
             let key = self.key.clone();
-            let hash_token = hash64(&hash_time_token);
+            let hash_token = hash64(&msg[95..]);
             let expire = self.expire as _;
             let sk = self.sk_hash;
             let secret = self.secret.clone();
