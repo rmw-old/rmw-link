@@ -16,11 +16,11 @@ exclude = ['lib']
 
 [profile.release]
 lto = true
-panic = 'abort'
 codegen-units = 1
 debug-assertions = false
 overflow-checks = false
 opt-level = 3
+#panic = 'abort'
 #strip = true
 #[target.'cfg(target_os = "linux")'.patch.crates-io]
 #[patch.crates-io]
