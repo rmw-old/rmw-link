@@ -2,13 +2,18 @@ use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, pool::spawn, typedef::T
 use ed25519_dalek_blake3::{Keypair, Signer};
 use expire_map::ExpireMap;
 use std::net::UdpSocket;
+use time::sec;
+use twox_hash::xxh3::hash64;
 
 pub struct Recv<Addr: ToAddr> {
   pub udp: UdpSocket,
   pub map: ExpireMap<Addr, u8>,
   pub key: Keypair,
   pub sk_hash: [u8; 16],
+  pub expire: u8,
 }
+
+const PING_TOKEN_LEADING_ZERO: u32 = 16;
 
 macro_rules! pk {
   ($key:expr) => {
@@ -18,7 +23,8 @@ macro_rules! pk {
 
 impl<Addr: ToAddr> Recv<Addr> {
   pub fn new(key: Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
-    let map = ExpireMap::new(config::get!(net / timeout / ping, 21u8), 60);
+    let expire = config::get!(net / timeout / ping, 21u8);
+    let map = ExpireMap::new(expire, 60);
     {
       let udp = udp.try_clone().unwrap();
       let map = map.clone();
@@ -35,6 +41,7 @@ impl<Addr: ToAddr> Recv<Addr> {
       map,
       sk_hash: hash128_bytes(key.secret.as_bytes()),
       key,
+      expire: expire / 3,
     }
   }
 
@@ -64,7 +71,7 @@ impl<Addr: ToAddr> Recv<Addr> {
     if msg_len == 0 {
       if self.map.has(addr) {
         println!("{} > ping reply", addr);
-        reply!(Cmd::Ping, &self.pk(), &time::sec().to_le_bytes())
+        reply!(Cmd::Ping, &self.pk(), &sec().to_le_bytes())
       }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
       println!("{} {:?} > {}", addr, &cmd, &msg.len());
@@ -72,7 +79,7 @@ impl<Addr: ToAddr> Recv<Addr> {
         Cmd::Ping => match msg_len {
           1 => reply!(&[]),
           39 => {
-            let now = time::sec().to_le_bytes();
+            let now = sec().to_le_bytes();
             let pk: [u8; 30] = msg[1..31].try_into().unwrap();
             if pk != self.pk() {
               reply!(Cmd::Ping, &self.sk_hash(&now, addr, &pk), &now)
@@ -91,7 +98,7 @@ impl<Addr: ToAddr> Recv<Addr> {
                       pk!(key),
                       &key.sign(&time_hash).to_bytes(),
                       &time_hash,
-                      &crate::util::leading_zero::find(8, &time_hash),
+                      &crate::util::leading_zero::find(PING_TOKEN_LEADING_ZERO, &time_hash),
                     ]
                     .concat(),
                     src,
@@ -100,7 +107,21 @@ impl<Addr: ToAddr> Recv<Addr> {
               });
             }
           }
-          msg_len if msg_len >= 119 => {}
+          msg_len if msg_len >= 119 => {
+            let time_hash_token = &msg[1 + 30 + 64..];
+            let hash: [u8; 16] = time_hash_token[..16].try_into().unwrap();
+            let time_bytes = time_hash_token[16..25].try_into().unwrap();
+            let time = u64::from_le_bytes(time_bytes);
+            let now = sec();
+            if (time <= now) && ((now - time) < (self.expire as _)) {
+              if self.sk_hash(&time_bytes, addr, &self.pk()) == hash {
+                if hash64(&time_hash_token).leading_zeros() >= PING_TOKEN_LEADING_ZERO {
+
+                  //let time = time_hash
+                }
+              }
+            }
+          }
           47 => {}
           _ => {}
         },
