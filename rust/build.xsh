@@ -16,7 +16,6 @@ elif system == 'linux':
   # -l static=stdc++"
 
 # x86_64-unknown-linux-gnu
-
 # system = 'unknown-linux-gnu'
 
 TARGET=f'{platform.machine()}-{system}'
@@ -35,7 +34,6 @@ out=f"target/{TARGET}/release/{NAME}"
 strip @(out)
 
 #./sh/upx.sh
-
 upx --best --lzma @(out)
 
 print(out)
