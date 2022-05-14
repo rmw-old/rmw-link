@@ -3,7 +3,7 @@ use ed25519_dalek_blake3::{Keypair, Signature, Signer};
 use expire_map::ExpireMap;
 use std::net::UdpSocket;
 use time::sec;
-use twox_hash::xxh3::hash64;
+use twox_hash::xxh3::{hash128, hash64};
 use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
 pub struct Recv<Addr: ToAddr> {
@@ -145,7 +145,16 @@ impl<Addr: ToAddr> Recv<Addr> {
                   let xpk: X25519PublicKey = (&rpk).into();
                   let xsecret = secret.diffie_hellman(&xpk);
                   //let rpk: X25519PublicKey = .into();
-                  send_to(&udp, &[&[Cmd::Ping as u8][..], pk].concat(), src)
+                  send_to(
+                    &udp,
+                    &[
+                      &[Cmd::Ping as u8][..],
+                      pk,
+                      &hash128(xsecret.as_bytes()).to_le_bytes(),
+                    ]
+                    .concat(),
+                    src,
+                  )
                 }
               }
             })
