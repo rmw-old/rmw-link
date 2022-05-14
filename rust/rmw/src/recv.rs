@@ -111,16 +111,21 @@ impl<Addr: ToAddr> Recv<Addr> {
             let time_hash_token = &msg[1 + 30 + 64..];
             let hash: [u8; 16] = time_hash_token[..16].try_into().unwrap();
             let time_bytes = time_hash_token[16..25].try_into().unwrap();
-            let time = u64::from_le_bytes(time_bytes);
-            let now = sec();
-            if (time <= now)
-              && ((now - time) < (self.expire as _))
-              && (self.sk_hash(&time_bytes, addr, &self.pk()) == hash)
-              && (hash64(&time_hash_token).leading_zeros() >= PING_TOKEN_LEADING_ZERO)
-            {
+            let key = self.key.clone();
+            let hash_token = hash64(&time_hash_token);
+            let expire = self.expire;
+            let sk = self.sk_hash;
+            spawn(move || {
+              let now = sec();
+              let time = u64::from_le_bytes(time_bytes);
+              if (time <= now)
+                && ((now - time) < (expire as _))
+                && (sk_hash(&sk, &time_bytes, &src, pk!(key)) == hash)
+                && (hash_token.leading_zeros() >= PING_TOKEN_LEADING_ZERO)
+              {}
+            })
 
-              //let time = time_hash
-            }
+            //let time = time_hash
           }
           47 => {}
           _ => {}
@@ -129,6 +134,10 @@ impl<Addr: ToAddr> Recv<Addr> {
     }
   }
   pub fn sk_hash(&self, now: &[u8], addr: &Addr, msg: &[u8]) -> [u8; 16] {
-    hash128_bytes!(&self.sk_hash, now, &addr.to_bytes(), msg)
+    sk_hash(&self.sk_hash, now, addr, msg)
   }
+}
+
+pub fn sk_hash<Addr: ToAddr>(hash: &[u8], now: &[u8], addr: &Addr, msg: &[u8]) -> [u8; 16] {
+  hash128_bytes!(hash, now, &addr.to_bytes(), msg)
 }
