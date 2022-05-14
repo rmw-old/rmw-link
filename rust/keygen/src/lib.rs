@@ -14,6 +14,10 @@ struct Seed {
 
 pub const PK_LEN: usize = 30;
 
+pub fn public_key_from_bytes(bytes: &[u8]) -> PublicKey {
+  PublicKey::from_bytes(&[bytes, &[0, 0]].concat()).unwrap()
+}
+
 impl Seed {
   pub fn new() -> Self {
     Self {

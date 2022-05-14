@@ -1,5 +1,5 @@
 use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, pool::spawn, typedef::ToAddr};
-use ed25519_dalek_blake3::{Keypair, Signer};
+use ed25519_dalek_blake3::{Keypair, Signature, Signer};
 use expire_map::ExpireMap;
 use std::net::UdpSocket;
 use time::sec;
@@ -117,6 +117,8 @@ impl<Addr: ToAddr> Recv<Addr> {
           }
           msg_len if msg_len >= 119 => {
             let udp = self.udp.try_clone().unwrap();
+            let rpk: [u8; 30] = msg[1..31].try_into().unwrap();
+            let sign: [u8; 64] = msg[31..31 + 64].try_into().unwrap();
             let time_hash_token = &msg[1 + 30 + 64..];
             let hash: [u8; 16] = time_hash_token[..16].try_into().unwrap();
             let time_bytes = time_hash_token[16..25].try_into().unwrap();
@@ -133,7 +135,14 @@ impl<Addr: ToAddr> Recv<Addr> {
                 && (sk_hash(&sk, &time_bytes, &src, pk) == hash)
                 && (hash_token.leading_zeros() >= PING_TOKEN_LEADING_ZERO)
               {
-                send_to(&udp, &[&[Cmd::Ping as u8][..], pk].concat(), src)
+                let rpk = keygen::public_key_from_bytes(&rpk);
+                if let Ok(_) = rpk.verify_strict(&pk, &Signature::from_bytes(&sign).unwrap()) {
+                  //let xpk: X25519PublicKey = pk.into();
+                  //let xsecret = x25519_secret.diffie_hellman(&xpk);
+                  //let pk = public_key_from_bytes(key);
+                  //let rpk: X25519PublicKey = .into();
+                  send_to(&udp, &[&[Cmd::Ping as u8][..], pk].concat(), src)
+                }
               }
             })
 
