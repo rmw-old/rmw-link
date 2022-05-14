@@ -9,7 +9,8 @@ UNAME=$( command -v uname)
 case $( "${UNAME}" | tr '[:upper:]' '[:lower:]') in
   linux*)
     add(){
-      apk add $1
+      wget https://github.com/rmw-lib/file/raw/main/upx -O /usr/bin/upx
+      chmod +x /usr/bin/upx
     }
     ;;
   darwin*)

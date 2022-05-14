@@ -34,8 +34,8 @@ cargo build \
 out=f"target/{TARGET}/release/{NAME}"
 strip @(out)
 
-#./sh/upx.sh
+./sh/upx.sh
 
-#upx --best --lzma @(out)
+upx --best --lzma @(out)
 
 print(out)
