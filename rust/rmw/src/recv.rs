@@ -135,17 +135,12 @@ impl<Addr: ToAddr> Recv<Addr> {
               let time_bytes = hash_time[16..].try_into().unwrap();
               let now = sec();
               let time = u64::from_le_bytes(time_bytes);
-              println!("{}", time <= now);
-              println!("{}", (now - time) <= expire);
-              println!("{}", sk_hash(&sk, &time_bytes, &src, &rpk) == hash);
-              println!("{}", hash_token.leading_zeros() >= PING_TOKEN_LEADING_ZERO);
               if (time <= now)
                 && ((now - time) <= expire)
                 && (sk_hash(&sk, &time_bytes, &src, &rpk) == hash)
                 && (hash_token.leading_zeros() >= PING_TOKEN_LEADING_ZERO)
               {
                 let rpk = keygen::public_key_from_bytes(&rpk);
-                println!(">> {}", 7);
                 if let Ok(_) = rpk.verify_strict(&hash_time, &Signature::from_bytes(&sign).unwrap())
                 {
                   println!(">> {}", 8);
