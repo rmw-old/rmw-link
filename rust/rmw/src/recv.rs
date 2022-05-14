@@ -123,12 +123,12 @@ impl<Addr: ToAddr> Recv<Addr> {
             let udp = self.udp.try_clone().unwrap();
             let rpk: [u8; 30] = msg[1..31].try_into().unwrap();
             println!(">> {}", 3);
-            let sign: [u8; 64] = msg[31..96].try_into().unwrap();
+            let sign: [u8; 64] = msg[31..95].try_into().unwrap();
             println!(">> {}", 4);
-            let time_hash_token = &msg[96..];
+            let time_hash_token = &msg[95..];
             let hash: [u8; 16] = time_hash_token[..16].try_into().unwrap();
             println!(">> {}", 5);
-            let time_bytes = time_hash_token[16..25].try_into().unwrap();
+            let time_bytes = time_hash_token[16..24].try_into().unwrap();
             println!(">> {}", 6);
             let key = self.key.clone();
             let hash_token = hash64(&time_hash_token);
@@ -163,8 +163,6 @@ impl<Addr: ToAddr> Recv<Addr> {
                 }
               }
             })
-
-            //let time = time_hash
           }
           47 => {
             if self.map.has(addr) {
