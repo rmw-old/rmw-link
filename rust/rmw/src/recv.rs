@@ -4,6 +4,7 @@ use expire_map::ExpireMap;
 use std::net::UdpSocket;
 use time::sec;
 use twox_hash::xxh3::hash64;
+use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
 pub struct Recv<Addr: ToAddr> {
   pub udp: UdpSocket,
@@ -11,6 +12,7 @@ pub struct Recv<Addr: ToAddr> {
   pub key: Keypair,
   pub sk_hash: [u8; 16],
   pub expire: u8,
+  pub secret: StaticSecret,
 }
 
 const PING_TOKEN_LEADING_ZERO: u32 = 16;
@@ -44,12 +46,14 @@ impl<Addr: ToAddr> Recv<Addr> {
         }
       });
     }
+    let secret: StaticSecret = (&key.secret).into();
     Self {
       udp,
       map,
       sk_hash: hash128_bytes(key.secret.as_bytes()),
       key,
       expire: expire / 3,
+      secret,
     }
   }
 
@@ -126,6 +130,7 @@ impl<Addr: ToAddr> Recv<Addr> {
             let hash_token = hash64(&time_hash_token);
             let expire = self.expire as _;
             let sk = self.sk_hash;
+            let secret = self.secret.clone();
             spawn(move || {
               let now = sec();
               let time = u64::from_le_bytes(time_bytes);
@@ -137,9 +142,8 @@ impl<Addr: ToAddr> Recv<Addr> {
               {
                 let rpk = keygen::public_key_from_bytes(&rpk);
                 if let Ok(_) = rpk.verify_strict(&pk, &Signature::from_bytes(&sign).unwrap()) {
-                  //let xpk: X25519PublicKey = pk.into();
-                  //let xsecret = x25519_secret.diffie_hellman(&xpk);
-                  //let pk = public_key_from_bytes(key);
+                  let xpk: X25519PublicKey = (&rpk).into();
+                  let xsecret = secret.diffie_hellman(&xpk);
                   //let rpk: X25519PublicKey = .into();
                   send_to(&udp, &[&[Cmd::Ping as u8][..], pk].concat(), src)
                 }
