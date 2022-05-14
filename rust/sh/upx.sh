@@ -9,8 +9,8 @@ UNAME=$( command -v uname)
 case $( "${UNAME}" | tr '[:upper:]' '[:lower:]') in
   linux*)
     add(){
-      wget https://github.com/rmw-lib/file/raw/main/upx -O /usr/bin/upx
-      chmod +x /usr/bin/upx
+      sudo wget https://github.com/rmw-lib/file/raw/main/upx -O /usr/bin/upx
+      sudo chmod +x /usr/bin/upx
     }
     ;;
   darwin*)
