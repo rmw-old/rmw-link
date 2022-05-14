@@ -119,6 +119,7 @@ impl<Addr: ToAddr> Recv<Addr> {
             */
             //reply!(ping_pk!(&self.pk, addr, msg));
           }
+          msg_len if msg_len >= 119 => {}
           _ => {}
         },
       }
