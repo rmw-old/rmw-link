@@ -113,13 +113,13 @@ impl<Addr: ToAddr> Recv<Addr> {
             let time_bytes = time_hash_token[16..25].try_into().unwrap();
             let time = u64::from_le_bytes(time_bytes);
             let now = sec();
-            if (time <= now) && ((now - time) < (self.expire as _)) {
-              if (self.sk_hash(&time_bytes, addr, &self.pk()) == hash)
-                && (hash64(&time_hash_token).leading_zeros() >= PING_TOKEN_LEADING_ZERO)
-              {
+            if (time <= now)
+              && ((now - time) < (self.expire as _))
+              && (self.sk_hash(&time_bytes, addr, &self.pk()) == hash)
+              && (hash64(&time_hash_token).leading_zeros() >= PING_TOKEN_LEADING_ZERO)
+            {
 
-                //let time = time_hash
-              }
+              //let time = time_hash
             }
           }
           47 => {}
