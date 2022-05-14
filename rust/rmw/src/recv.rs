@@ -170,7 +170,17 @@ impl<Addr: ToAddr> Recv<Addr> {
           }
           47 => {
             if self.map.has(addr) {
-              info!("finally addr {}", addr)
+              let rpk: [u8; 30] = msg[1..31].try_into().unwrap();
+              let hash: [u8; 16] = msg[31..].try_into().unwrap();
+              let secret = self.secret.clone();
+              spawn(move || {
+                let rpk = keygen::public_key_from_bytes(&rpk);
+                let xpk: X25519PublicKey = (&rpk).into();
+                let xsecret = secret.diffie_hellman(&xpk);
+                if hash128(xsecret.as_bytes()).to_le_bytes() == hash {
+                  print!("connect success");
+                }
+              })
             }
           }
           _ => {}
