@@ -75,12 +75,15 @@ impl<Addr: ToAddr> Recv<Addr> {
           1 => reply!(&[]),
           55 => {
             let now = time::sec().to_le_bytes();
-            reply!(
-              Cmd::Ping,
-              &msg[1..25],
-              &self.sk_hash(&now, addr, &msg[25..]),
-              &now
-            )
+            let pk: [u8; 30] = msg[25..].try_into().unwrap();
+            if pk != self.pk() {
+              reply!(
+                Cmd::Ping,
+                &msg[1..25],
+                &self.sk_hash(&now, addr, &msg[25..]),
+                &now
+              )
+            }
           }
           49 => {
             let hash: [u8; 16] = msg[1..17].try_into().unwrap();
