@@ -22,7 +22,6 @@ TARGET=f'{platform.machine()}-{system}'
 
 NAME="rmw"
 
-
 cargo build \
 --release \
 -Z build-std=std,panic_abort \
