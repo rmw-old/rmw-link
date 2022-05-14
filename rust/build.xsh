@@ -26,13 +26,14 @@ NAME="rmw"
 
 cargo build \
 --release \
--Z build-std=std,panic_abort \
--Z build-std-features=panic_immediate_abort \
 -p @(NAME) \
 --target @(TARGET)
 
+#-Z build-std=std,panic_abort \
+#-Z build-std-features=panic_immediate_abort \
+
 out=f"target/{TARGET}/release/{NAME}"
-strip @(out)
+# strip @(out)
 
 #./sh/upx.sh
 
