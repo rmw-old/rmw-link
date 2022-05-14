@@ -8,7 +8,9 @@ COPY os /
 RUN \
   sed -i "s/deb.debian.org/mirrors.aliyun.com/g" /etc/apt/sources.list &&\
   apt-get update &&\
-  apt-get install -y curl locales zsh python3 python3-pip xonsh libclang-dev
+  apt-get install -y curl locales zsh python3 python3-pip xonsh libclang-dev wget &&\
+  wget https://github.com/rmw-lib/file/raw/main/upx -O /usr/bin/upx &&\
+  chmod +x /usr/bin/upx
 
 SHELL ["/bin/zsh", "-c"]
 

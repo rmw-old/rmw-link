@@ -64,28 +64,22 @@ impl<Addr: ToAddr> Recv<Addr> {
     if msg_len == 0 {
       if self.map.renew(addr) {
         println!("{} > ping reply", addr);
-        let now = time::sec().to_le_bytes();
-        let pk = &self.pk();
-        reply!(Cmd::Ping, &self.sk_hash(&now, addr, pk), &now, pk)
+        reply!(Cmd::Ping, &self.pk(), &time::sec().to_le_bytes())
       }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
       println!("{} {:?} > {}", addr, &cmd, &msg.len());
       match cmd {
         Cmd::Ping => match msg_len {
           1 => reply!(&[]),
-          55 => {
+          39 => {
             let now = time::sec().to_le_bytes();
-            let pk: [u8; 30] = msg[25..].try_into().unwrap();
+            let pk: [u8; 30] = msg[1..31].try_into().unwrap();
             if pk != self.pk() {
-              reply!(
-                Cmd::Ping,
-                &msg[1..25],
-                &self.sk_hash(&now, addr, &msg[25..]),
-                &now
-              )
+              reply!(Cmd::Ping, &self.sk_hash(&now, addr, &pk), &now)
             }
           }
-          49 => {
+          25 => {
+            if self.map.renew(addr) {}
             let hash: [u8; 16] = msg[1..17].try_into().unwrap();
             if self.sk_hash(&msg[17..25], addr, &self.pk()) == hash {
               {
@@ -108,18 +102,9 @@ impl<Addr: ToAddr> Recv<Addr> {
                 });
               }
             }
-
-            //hash128_bytes!(&self.sk_hash, &now, &addr.to_bytes(), pk)
-
-            //send!(PingPk)
-            /*
-            reply!(Cmd::Ping,
-            &self.pk
-            )
-            */
-            //reply!(ping_pk!(&self.pk, addr, msg));
           }
           msg_len if msg_len >= 119 => {}
+          47 => {}
           _ => {}
         },
       }
