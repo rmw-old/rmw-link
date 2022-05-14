@@ -79,28 +79,25 @@ impl<Addr: ToAddr> Recv<Addr> {
             }
           }
           25 => {
-            if self.map.renew(addr) {}
-            let hash: [u8; 16] = msg[1..17].try_into().unwrap();
-            if self.sk_hash(&msg[17..25], addr, &self.pk()) == hash {
-              {
-                let udp = self.udp.try_clone().unwrap();
-                let key = self.key.clone();
-                let time_hash: [u8; 24] = msg[25..].try_into().unwrap();
-                POOL.spawn(move || {
-                  err::log(
-                    udp.send_to(
-                      &[
-                        &[Cmd::Ping as u8][..],
-                        &time_hash,
-                        pk!(key),
-                        &key.sign(&time_hash).to_bytes(),
-                      ]
-                      .concat(),
-                      src,
-                    ),
-                  );
-                });
-              }
+            if self.map.renew(addr) {
+              let hash: [u8; 16] = msg[1..17].try_into().unwrap();
+              let udp = self.udp.try_clone().unwrap();
+              let key = self.key.clone();
+              let time_hash: [u8; 24] = msg[25..].try_into().unwrap();
+              POOL.spawn(move || {
+                err::log(
+                  udp.send_to(
+                    &[
+                      &[Cmd::Ping as u8][..],
+                      &time_hash,
+                      pk!(key),
+                      &key.sign(&time_hash).to_bytes(),
+                    ]
+                    .concat(),
+                    src,
+                  ),
+                );
+              });
             }
           }
           msg_len if msg_len >= 119 => {}
