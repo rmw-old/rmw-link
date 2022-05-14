@@ -121,12 +121,18 @@ impl<Addr: ToAddr> Recv<Addr> {
             }
           }
           msg_len if msg_len >= 119 => {
+            println!(">> {}", 1);
             let udp = self.udp.try_clone().unwrap();
+            println!(">> {}", 2);
             let rpk: [u8; 30] = msg[1..31].try_into().unwrap();
+            println!(">> {}", 3);
             let sign: [u8; 64] = msg[31..31 + 64 + 1].try_into().unwrap();
+            println!(">> {}", 4);
             let time_hash_token = &msg[31 + 64 + 1..];
             let hash: [u8; 16] = time_hash_token[..16].try_into().unwrap();
+            println!(">> {}", 5);
             let time_bytes = time_hash_token[16..25].try_into().unwrap();
+            println!(">> {}", 6);
             let key = self.key.clone();
             let hash_token = hash64(&time_hash_token);
             let expire = self.expire as _;
@@ -142,7 +148,9 @@ impl<Addr: ToAddr> Recv<Addr> {
                 && (hash_token.leading_zeros() >= PING_TOKEN_LEADING_ZERO)
               {
                 let rpk = keygen::public_key_from_bytes(&rpk);
+                println!(">> {}", 7);
                 if let Ok(_) = rpk.verify_strict(&pk, &Signature::from_bytes(&sign).unwrap()) {
+                  println!(">> {}", 8);
                   let xpk: X25519PublicKey = (&rpk).into();
                   let xsecret = secret.diffie_hellman(&xpk);
                   //let rpk: X25519PublicKey = .into();
