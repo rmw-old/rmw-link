@@ -101,16 +101,16 @@ impl<Addr: ToAddr> Recv<Addr> {
             if self.map.has(addr) {
               let udp = self.udp.try_clone().unwrap();
               let key = self.key.clone();
-              let time_hash: [u8; 24] = msg[1..].try_into().unwrap();
+              let hash_time: [u8; 24] = msg[1..].try_into().unwrap();
               spawn(move || {
                 err::log(
                   udp.send_to(
                     &[
                       &[Cmd::Ping as u8][..],
                       pk!(key),
-                      &key.sign(&time_hash).to_bytes(),
-                      &time_hash,
-                      &crate::util::leading_zero::find(PING_TOKEN_LEADING_ZERO, &time_hash),
+                      &key.sign(&hash_time).to_bytes(),
+                      &hash_time,
+                      &crate::util::leading_zero::find(PING_TOKEN_LEADING_ZERO, &hash_time),
                     ]
                     .concat(),
                     src,
@@ -123,30 +123,32 @@ impl<Addr: ToAddr> Recv<Addr> {
             let udp = self.udp.try_clone().unwrap();
             let rpk: [u8; 30] = msg[1..31].try_into().unwrap();
             let sign: [u8; 64] = msg[31..95].try_into().unwrap();
-            let time_hash_token = &msg[95..];
-            let hash: [u8; 16] = time_hash_token[..16].try_into().unwrap();
-            let time_bytes = time_hash_token[16..24].try_into().unwrap();
+            let hash_time_token = &msg[95..];
+            let hash_time: [u8; 24] = hash_time_token[95..119].try_into().unwrap();
             let key = self.key.clone();
-            let hash_token = hash64(&time_hash_token);
+            let hash_token = hash64(&hash_time_token);
             let expire = self.expire as _;
             let sk = self.sk_hash;
             let secret = self.secret.clone();
             spawn(move || {
+              let pk = pk!(key);
+              let hash: [u8; 16] = hash_time[..16].try_into().unwrap();
+              let time_bytes = hash_time[16..].try_into().unwrap();
               let now = sec();
               let time = u64::from_le_bytes(time_bytes);
-              let pk = pk!(key);
               println!("{}", time <= now);
               println!("{}", (now - time) <= expire);
-              println!("{}", sk_hash(&sk, &time_bytes, &src, pk) == hash);
+              println!("{}", sk_hash(&sk, &time_bytes, &src, &rpk) == hash);
               println!("{}", hash_token.leading_zeros() >= PING_TOKEN_LEADING_ZERO);
               if (time <= now)
                 && ((now - time) <= expire)
-                && (sk_hash(&sk, &time_bytes, &src, pk) == hash)
+                && (sk_hash(&sk, &time_bytes, &src, &rpk) == hash)
                 && (hash_token.leading_zeros() >= PING_TOKEN_LEADING_ZERO)
               {
                 let rpk = keygen::public_key_from_bytes(&rpk);
                 println!(">> {}", 7);
-                if let Ok(_) = rpk.verify_strict(&pk, &Signature::from_bytes(&sign).unwrap()) {
+                if let Ok(_) = rpk.verify_strict(&hash_time, &Signature::from_bytes(&sign).unwrap())
+                {
                   println!(">> {}", 8);
                   let xpk: X25519PublicKey = (&rpk).into();
                   let xsecret = secret.diffie_hellman(&xpk);
