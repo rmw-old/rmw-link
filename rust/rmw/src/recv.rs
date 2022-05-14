@@ -143,7 +143,6 @@ impl<Addr: ToAddr> Recv<Addr> {
                 let rpk = keygen::public_key_from_bytes(&rpk);
                 if let Ok(_) = rpk.verify_strict(&hash_time, &Signature::from_bytes(&sign).unwrap())
                 {
-                  println!(">> {}", 8);
                   let xpk: X25519PublicKey = (&rpk).into();
                   let xsecret = secret.diffie_hellman(&xpk);
                   send_to(
@@ -170,7 +169,7 @@ impl<Addr: ToAddr> Recv<Addr> {
                 let xpk: X25519PublicKey = (&rpk).into();
                 let xsecret = secret.diffie_hellman(&xpk);
                 if hash128(xsecret.as_bytes()).to_le_bytes() == hash {
-                  print!("connect success");
+                  println!("connect success");
                 }
               })
             }
