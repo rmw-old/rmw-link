@@ -51,11 +51,11 @@ where
     }
   }
 
-  pub fn new(timeout: U, max_interval: u64) -> Self {
+  pub fn new(timeout: U, max_interval: u64) -> (Self, async_std::task::JoinHandle<()>) {
     let mut interval: u64 = 1 + timeout.as_();
     let expire_map = Arc::new(RwLock::new(HashMap::new()));
     let map = expire_map.clone();
-    spawn(async move {
+    let timer = spawn(async move {
       loop {
         sleep(Duration::from_secs(interval)).await;
         let now: U = sec().as_();
@@ -82,6 +82,6 @@ where
         }
       }
     });
-    ExpireMap(expire_map)
+    (ExpireMap(expire_map), timer)
   }
 }

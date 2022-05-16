@@ -21,7 +21,7 @@ pub struct Recv<Addr: ToAddr> {
   pub expire: u8,
   pub secret: StaticSecret,
   pub ip_sk: Arc<Cache<Addr, StaticSecret>>,
-  pub timer: ManuallyDrop<async_std::task::JoinHandle<()>>,
+  pub timer: ManuallyDrop<[async_std::task::JoinHandle<()>; 2]>,
 }
 
 const PING_TOKEN_LEADING_ZERO: u32 = 16;
@@ -42,16 +42,19 @@ fn sk_hash<Addr: ToAddr>(hash: &[u8], now: &[u8], addr: &Addr, msg: &[u8]) -> [u
 
 impl<Addr: ToAddr> Drop for Recv<Addr> {
   fn drop(&mut self) {
-    let mut timer = unsafe { mem::uninitialized() };
+    let mut timer = unsafe { mem::MaybeUninit::uninit().assume_init() };
     mem::swap(&mut timer, &mut *self.timer);
-    async_std::task::block_on(timer.cancel());
+
+    for i in timer {
+      async_std::task::block_on(i.cancel());
+    }
   }
 }
 
 impl<Addr: ToAddr> Recv<Addr> {
   pub fn new(key: Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
     let expire = config::get!(net / timeout / ping, 21u8);
-    let ping = ExpireMap::new(expire, (1 + expire * 2) as _);
+    let (ping, timer_expire_map) = ExpireMap::new(expire, (1 + expire * 5) as _);
     {
       let ping = ping.clone();
       let udp = udp.try_clone().unwrap();
@@ -69,12 +72,13 @@ impl<Addr: ToAddr> Recv<Addr> {
 
     let ip_sk_expire = ip_sk.clone();
 
-    let timer = ManuallyDrop::new(async_std::task::spawn(async move {
-      ip_sk_expire.monitor(2, 0, Duration::from_secs(3)).await
-    }));
-
     Self {
-      timer,
+      timer: ManuallyDrop::new([
+        async_std::task::spawn(
+          async move { ip_sk_expire.monitor(2, 0, Duration::from_secs(3)).await },
+        ),
+        timer_expire_map,
+      ]),
       udp,
       ip_sk,
       ping,
