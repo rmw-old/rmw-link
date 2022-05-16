@@ -10,6 +10,7 @@ use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 pub struct Recv<Addr: ToAddr> {
   pub udp: UdpSocket,
   pub ping: ExpireMap<Addr, u8>,
+  //pub ip_sk: ExpireMap<Addr, [u8; 32]>,
   pub key: Keypair,
   pub sk_hash: [u8; 16],
   pub expire: u8,
@@ -35,7 +36,7 @@ fn sk_hash<Addr: ToAddr>(hash: &[u8], now: &[u8], addr: &Addr, msg: &[u8]) -> [u
 impl<Addr: ToAddr> Recv<Addr> {
   pub fn new(key: Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
     let expire = config::get!(net / timeout / ping, 21u8);
-    let ping = ExpireMap::new(expire, 60);
+    let ping = ExpireMap::new(expire, (1 + expire * 2) as _);
     {
       let ping = ping.clone();
       let udp = udp.try_clone().unwrap();
@@ -48,8 +49,10 @@ impl<Addr: ToAddr> Recv<Addr> {
       });
     }
     let secret: StaticSecret = (&key.secret).into();
+    //let connect_timeout = config::get!(net / timeout / conn, 900 + expire);
     Self {
       udp,
+      //ip_sk: ExpireMap::new(connect_timeout, connect_timeout / 2 + 1),
       ping,
       sk_hash: hash128_bytes(key.secret.as_bytes()),
       key,
