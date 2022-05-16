@@ -1,4 +1,4 @@
-#![feature(hash_drain_filter)]
+#![feature(btree_drain_filter)]
 #![feature(trait_alias)]
 
 use async_std::task::{sleep, spawn};
@@ -6,18 +6,18 @@ use num::traits::AsPrimitive;
 use parking_lot::RwLock;
 use rand::{thread_rng, Rng};
 use std::marker::Copy;
-use std::{collections::HashMap, hash::Hash, sync::Arc, time::Duration};
+use std::{collections::BTreeMap, hash::Hash, sync::Arc, time::Duration};
 use time::sec;
 //use tokio::{spawn, time::sleep};
 pub trait SyncSend = 'static + Sync + Send + Copy;
 pub trait AsU64 = AsPrimitive<u64> + Sync + Send;
 
 #[derive(Debug, Clone)]
-pub struct ExpireMap<K: SyncSend + Eq + Hash, V: SyncSend, U: AsU64 = u16>(
-  Arc<RwLock<HashMap<K, (V, U)>>>,
+pub struct ExpireMap<K: SyncSend + Eq + std::cmp::Ord, V: SyncSend, U: AsU64 = u16>(
+  Arc<RwLock<BTreeMap<K, (V, U)>>>,
 );
 
-impl<K: SyncSend + Eq + Hash, V: SyncSend, U: AsU64> ExpireMap<K, V, U>
+impl<K: SyncSend + Eq + Hash + std::cmp::Ord, V: SyncSend, U: AsU64> ExpireMap<K, V, U>
 where
   u64: AsPrimitive<U>,
 {
@@ -50,7 +50,7 @@ where
   pub fn new(timeout: U, max_interval: u64) -> (Self, async_std::task::JoinHandle<()>) {
     let timeout: u64 = timeout.as_();
     let mut interval: u64 = 1 + timeout;
-    let expire_map = Arc::new(RwLock::new(HashMap::<_, (V, U)>::new()));
+    let expire_map = Arc::new(RwLock::new(BTreeMap::<_, (V, U)>::new()));
     let map = expire_map.clone();
     let simple = 3;
     let timer = spawn(async move {
