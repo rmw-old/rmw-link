@@ -16,7 +16,7 @@ pub fn hash128_bytes(data: &[u8]) -> [u8; 16] {
 macro_rules! hash128_bytes {
   ($sk_hash:expr,$($i:expr),*) => {
     {
-      use crate::key::{hash128_bytes};
+      use $crate::key::{hash128_bytes};
       hash128_bytes(&[&$sk_hash[..], $($i),*].concat())
     }
   };
