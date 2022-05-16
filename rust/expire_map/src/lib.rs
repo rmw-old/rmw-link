@@ -9,26 +9,28 @@ use std::marker::Copy;
 use std::{collections::HashMap, hash::Hash, sync::Arc, time::Duration};
 use time::sec;
 //use tokio::{spawn, time::sleep};
-pub trait SyncSend = 'static + Sync + Send + Eq + Hash + Copy;
+pub trait SyncSend = 'static + Sync + Send + Copy;
 pub trait AsU64 = AsPrimitive<u64> + Sync + Send;
 
 #[derive(Debug, Clone)]
-pub struct ExpireMap<K: SyncSend, U: AsU64>(Arc<RwLock<HashMap<K, U>>>);
+pub struct ExpireMap<K: SyncSend + Eq + Hash, V: SyncSend, U: AsU64 = u16>(
+  Arc<RwLock<HashMap<K, (V, U)>>>,
+);
 
-impl<K: SyncSend, U: AsU64> ExpireMap<K, U>
+impl<K: SyncSend + Eq + Hash, V: SyncSend, U: AsU64> ExpireMap<K, V, U>
 where
   u64: AsPrimitive<U>,
 {
-  pub fn add(&self, key: K) {
-    self.0.write().insert(key, sec().as_());
+  pub fn add(&self, key: K, val: V) {
+    self.0.write().insert(key, (val, sec().as_()));
   }
 
-  pub fn renew(&self, key: &K) -> bool {
+  pub fn renew(&self, key: &K) -> Option<V> {
     if let Some(val) = self.0.write().get_mut(key) {
-      *val = sec().as_();
-      true
+      (*val).1 = sec().as_();
+      Some(val.0)
     } else {
-      false
+      None
     }
   }
 
@@ -48,7 +50,7 @@ where
   pub fn new(timeout: U, max_interval: u64) -> (Self, async_std::task::JoinHandle<()>) {
     let timeout: u64 = timeout.as_();
     let mut interval: u64 = 1 + timeout;
-    let expire_map = Arc::new(RwLock::new(HashMap::<_, U>::new()));
+    let expire_map = Arc::new(RwLock::new(HashMap::<_, (V, U)>::new()));
     let map = expire_map.clone();
     let simple = 3;
     let timer = spawn(async move {
@@ -66,7 +68,7 @@ where
           let _ = map
             .write()
             .drain_filter(|_, v| {
-              if now.wrapping_sub(v.as_()) > timeout {
+              if now.wrapping_sub(v.1.as_()) > timeout {
                 deleted += 1;
                 true
               } else {

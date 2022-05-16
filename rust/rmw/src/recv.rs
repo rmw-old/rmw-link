@@ -14,7 +14,7 @@ use x25519_dalek::{PublicKey as X25519PublicKey, SharedSecret, StaticSecret};
 
 pub struct Recv<Addr: ToAddr> {
   pub udp: UdpSocket,
-  pub ping: ExpireMap<Addr, u8>,
+  pub ping: ExpireMap<Addr, (), u8>,
   pub key: Keypair,
   pub sk_hash: [u8; 16],
   pub expire: u8,
@@ -60,7 +60,7 @@ impl<Addr: ToAddr> Recv<Addr> {
 
       spawn(move || {
         for addr in boot {
-          ping.add(addr);
+          ping.add(addr, ());
           send_to(&udp, &[Cmd::Ping as u8], addr);
         }
       });
