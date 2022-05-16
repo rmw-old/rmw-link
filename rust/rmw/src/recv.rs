@@ -2,7 +2,6 @@ use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, pool::spawn, typedef::T
 use ed25519_dalek_blake3::{Keypair, Signature, Signer};
 use expire_map::ExpireMap;
 use log::info;
-use retainer::Cache;
 use std::{
   mem::{self, ManuallyDrop},
   net::UdpSocket,
@@ -20,8 +19,8 @@ pub struct Recv<Addr: ToAddr> {
   pub sk_hash: [u8; 16],
   pub expire: u8,
   pub secret: StaticSecret,
-  pub ip_sk: Arc<Cache<Addr, StaticSecret>>,
-  pub timer: ManuallyDrop<[async_std::task::JoinHandle<()>; 2]>,
+  //pub ip_sk: Arc<Cache<Addr, SharedSecret>,
+  pub timer: ManuallyDrop<[async_std::task::JoinHandle<()>; 1]>,
 }
 
 const PING_TOKEN_LEADING_ZERO: u32 = 16;
@@ -68,19 +67,21 @@ impl<Addr: ToAddr> Recv<Addr> {
     }
     let secret: StaticSecret = (&key.secret).into();
 
-    let ip_sk = Arc::new(Cache::new());
+    // let ip_sk = Arc::new(Cache::new());
 
-    let ip_sk_expire = ip_sk.clone();
+    //  let ip_sk_expire = ip_sk.clone();
 
     Self {
       timer: ManuallyDrop::new([
+        /*
         async_std::task::spawn(
           async move { ip_sk_expire.monitor(2, 0, Duration::from_secs(3)).await },
         ),
+        */
         timer_expire_map,
       ]),
       udp,
-      ip_sk,
+      //ip_sk,
       ping,
       sk_hash: hash128_bytes(key.secret.as_bytes()),
       key,
@@ -179,6 +180,7 @@ impl<Addr: ToAddr> Recv<Addr> {
                   let xsecret = secret.diffie_hellman(&xpk);
 
                   info!("{} {:?}", src, xsecret.as_bytes());
+                  //self.ip_sk.insert(addr, xsecret);
                   send_to(
                     &udp,
                     &[
