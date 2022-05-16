@@ -1,6 +1,7 @@
 use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, pool::spawn, typedef::ToAddr};
 use ed25519_dalek_blake3::{Keypair, Signature, Signer};
 use expire_map::ExpireMap;
+use log::info;
 use std::net::UdpSocket;
 use time::sec;
 use twox_hash::xxh3::{hash128, hash64};
@@ -146,7 +147,7 @@ impl<Addr: ToAddr> Recv<Addr> {
                   let xpk: X25519PublicKey = (&rpk).into();
                   let xsecret = secret.diffie_hellman(&xpk);
 
-                  // 记录 src xsecret
+                  info!("{} {:?}", src, xsecret.as_bytes());
                   send_to(
                     &udp,
                     &[
@@ -171,7 +172,7 @@ impl<Addr: ToAddr> Recv<Addr> {
                 let xpk: X25519PublicKey = (&rpk).into();
                 let xsecret = secret.diffie_hellman(&xpk);
                 if hash128(xsecret.as_bytes()).to_le_bytes() == hash {
-                  println!("connect success");
+                  info!("connect success");
                 }
               })
             }
