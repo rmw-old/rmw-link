@@ -1,6 +1,3 @@
 [submodule "rust/speedy"]
 	path = rust/lib/speedy
 	url = git@github.com:rmw-lib/speedy.git
-[submodule "rust/retainer"]
-	path = rust/retainer
-	url = git@github.com:rmw-lib/retainer.git
