@@ -32,9 +32,9 @@
 
 ## 传输流程
 
-心跳包
+心跳包 (谁发起 ping 谁发心跳)
+  heartbeat 本地时间
   heartbeat 时间
-  heartbeat 响应时间
 
 数据大于 8 字节
 解密失败响应 DecryptionFail
