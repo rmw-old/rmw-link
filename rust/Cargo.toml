@@ -3,6 +3,7 @@ members = [
   "rmw",
   "cli",
   "keygen",
+  "retainer",
   "db",
   "dir",
   "config",

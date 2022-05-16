@@ -2,19 +2,26 @@ use crate::{cmd::Cmd, hash128_bytes, key::hash128_bytes, pool::spawn, typedef::T
 use ed25519_dalek_blake3::{Keypair, Signature, Signer};
 use expire_map::ExpireMap;
 use log::info;
-use std::net::UdpSocket;
+use retainer::Cache;
+use std::{
+  mem::{self, ManuallyDrop},
+  net::UdpSocket,
+  sync::Arc,
+  time::Duration,
+};
 use time::sec;
 use twox_hash::xxh3::{hash128, hash64};
-use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
+use x25519_dalek::{PublicKey as X25519PublicKey, SharedSecret, StaticSecret};
 
 pub struct Recv<Addr: ToAddr> {
   pub udp: UdpSocket,
   pub ping: ExpireMap<Addr, u8>,
-  //pub ip_sk: ExpireMap<Addr, [u8; 32]>,
   pub key: Keypair,
   pub sk_hash: [u8; 16],
   pub expire: u8,
   pub secret: StaticSecret,
+  pub ip_sk: Arc<Cache<Addr, StaticSecret>>,
+  pub timer: ManuallyDrop<async_std::task::JoinHandle<()>>,
 }
 
 const PING_TOKEN_LEADING_ZERO: u32 = 16;
@@ -33,6 +40,14 @@ fn sk_hash<Addr: ToAddr>(hash: &[u8], now: &[u8], addr: &Addr, msg: &[u8]) -> [u
   hash128_bytes!(hash, now, &addr.to_bytes(), msg)
 }
 
+impl<Addr: ToAddr> Drop for Recv<Addr> {
+  fn drop(&mut self) {
+    let mut timer = unsafe { mem::uninitialized() };
+    mem::swap(&mut timer, &mut *self.timer);
+    async_std::task::block_on(timer.cancel());
+  }
+}
+
 impl<Addr: ToAddr> Recv<Addr> {
   pub fn new(key: Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
     let expire = config::get!(net / timeout / ping, 21u8);
@@ -49,10 +64,19 @@ impl<Addr: ToAddr> Recv<Addr> {
       });
     }
     let secret: StaticSecret = (&key.secret).into();
-    //let connect_timeout = config::get!(net / timeout / conn, 900 + expire);
+
+    let ip_sk = Arc::new(Cache::new());
+
+    let ip_sk_expire = ip_sk.clone();
+
+    let timer = ManuallyDrop::new(async_std::task::spawn(async move {
+      ip_sk_expire.monitor(2, 0, Duration::from_secs(3)).await
+    }));
+
     Self {
+      timer,
       udp,
-      //ip_sk: ExpireMap::new(connect_timeout, connect_timeout / 2 + 1),
+      ip_sk,
       ping,
       sk_hash: hash128_bytes(key.secret.as_bytes()),
       key,
