@@ -9,7 +9,7 @@ use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
 pub struct Recv<Addr: ToAddr> {
   pub udp: UdpSocket,
-  pub map: ExpireMap<Addr, u8>,
+  pub ping: ExpireMap<Addr, u8>,
   pub key: Keypair,
   pub sk_hash: [u8; 16],
   pub expire: u8,
@@ -35,14 +35,14 @@ fn sk_hash<Addr: ToAddr>(hash: &[u8], now: &[u8], addr: &Addr, msg: &[u8]) -> [u
 impl<Addr: ToAddr> Recv<Addr> {
   pub fn new(key: Keypair, udp: UdpSocket, boot: Vec<Addr>) -> Self {
     let expire = config::get!(net / timeout / ping, 21u8);
-    let map = ExpireMap::new(expire, 60);
+    let ping = ExpireMap::new(expire, 60);
     {
-      let map = map.clone();
+      let ping = ping.clone();
       let udp = udp.try_clone().unwrap();
 
       spawn(move || {
         for addr in boot {
-          map.add(addr);
+          ping.add(addr);
           send_to(&udp, &[Cmd::Ping as u8], addr);
         }
       });
@@ -50,7 +50,7 @@ impl<Addr: ToAddr> Recv<Addr> {
     let secret: StaticSecret = (&key.secret).into();
     Self {
       udp,
-      map,
+      ping,
       sk_hash: hash128_bytes(key.secret.as_bytes()),
       key,
       expire: expire / 3,
@@ -82,7 +82,7 @@ impl<Addr: ToAddr> Recv<Addr> {
     }
 
     if msg_len == 0 {
-      if self.map.has(addr) {
+      if self.ping.has(addr) {
         println!("{} > ping reply", addr);
         reply!(Cmd::Ping, &self.pk(), &sec().to_le_bytes())
       }
@@ -99,7 +99,7 @@ impl<Addr: ToAddr> Recv<Addr> {
             }
           }
           25 => {
-            if self.map.has(addr) {
+            if self.ping.has(addr) {
               let udp = self.udp.try_clone().unwrap();
               let key = self.key.clone();
               let hash_time: [u8; 24] = msg[1..].try_into().unwrap();
@@ -163,7 +163,7 @@ impl<Addr: ToAddr> Recv<Addr> {
             })
           }
           47 => {
-            if self.map.has(addr) {
+            if self.ping.pop(addr) {
               let rpk: [u8; 30] = msg[1..31].try_into().unwrap();
               let hash: [u8; 16] = msg[31..].try_into().unwrap();
               let secret = self.secret.clone();
