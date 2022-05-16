@@ -34,4 +34,4 @@
 
 解密失败
 
-响应 DECRYPTION_FAILURE
+响应 DecryptionFail

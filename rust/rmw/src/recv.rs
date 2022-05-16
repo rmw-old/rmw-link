@@ -44,9 +44,7 @@ impl<Addr: ToAddr> Drop for Recv<Addr> {
     let mut timer = unsafe { mem::MaybeUninit::uninit().assume_init() };
     mem::swap(&mut timer, &mut *self.timer);
 
-    for i in timer {
-      async_std::task::block_on(i.cancel());
-    }
+    timer.map(|i| async_std::task::spawn(i.cancel()));
   }
 }
 
