@@ -5,8 +5,6 @@ use log::info;
 use std::{
   mem::{self, ManuallyDrop},
   net::UdpSocket,
-  sync::Arc,
-  time::Duration,
 };
 use time::sec;
 use twox_hash::xxh3::{hash128, hash64};
