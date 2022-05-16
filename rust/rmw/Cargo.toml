@@ -16,7 +16,6 @@ anyhow = "1.0.57"
 async-std = "1.11.0"
 config = { path = "../config" }
 const-str = "0.3.1"
-db = { path = "../db" }
 dir = { path = "../dir" }
 enum_dispatch = "0.3.8"
 err = { path = "../err" }

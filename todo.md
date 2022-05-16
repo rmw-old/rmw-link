@@ -32,6 +32,5 @@
 
 ## 传输流程
 
-解密失败
-
-响应 DecryptionFail
+数据大于 8 字节
+解密失败响应 DecryptionFail
