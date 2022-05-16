@@ -32,5 +32,9 @@
 
 ## 传输流程
 
+心跳包
+  heartbeat 时间
+  heartbeat 响应时间
+
 数据大于 8 字节
 解密失败响应 DecryptionFail

@@ -117,7 +117,6 @@ impl<Addr: ToAddr> Recv<Addr> {
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
       println!("{} {:?} > {}", addr, &cmd, &msg.len());
       match cmd {
-        Cmd::DecryptionFail => {}
         Cmd::Ping => match msg_len {
           1 => reply!(&[]),
           39 => {
@@ -209,6 +208,8 @@ impl<Addr: ToAddr> Recv<Addr> {
           }
           _ => {}
         },
+        Cmd::Heartbeat => {}
+        Cmd::DecryptionFail => {}
       }
     }
   }
