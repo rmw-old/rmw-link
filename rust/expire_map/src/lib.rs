@@ -4,6 +4,7 @@
 use async_std::task::{sleep, spawn};
 use num::traits::{AsPrimitive, WrappingSub};
 use parking_lot::RwLock;
+use rand::{thread_rng, Rng};
 use std::marker::Copy;
 use std::{collections::HashMap, hash::Hash, sync::Arc, time::Duration};
 use time::sec;
@@ -55,12 +56,20 @@ where
     let mut interval: u64 = 1 + timeout.as_();
     let expire_map = Arc::new(RwLock::new(HashMap::new()));
     let map = expire_map.clone();
+    let simple = 3;
+
     let timer = spawn(async move {
       loop {
         sleep(Duration::from_secs(interval)).await;
         let now: U = sec().as_();
         loop {
           let mut deleted: u8 = 0;
+          let len: usize = map.read().len();
+          let skip = if len > simple {
+            thread_rng().gen_range(0..len - simple)
+          } else {
+            0
+          };
           let _ = map
             .write()
             .drain_filter(|_, v| {
@@ -71,7 +80,8 @@ where
                 false
               }
             })
-            .take(3);
+            .skip(skip)
+            .take(simple);
           if deleted == 0 {
             if interval < max_interval {
               interval += 1;
