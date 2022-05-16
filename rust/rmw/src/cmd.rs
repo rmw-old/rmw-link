@@ -5,4 +5,5 @@ use std::fmt::Debug;
 #[repr(u8)]
 pub enum Cmd {
   Ping,
+  DecryptionFail,
 }
