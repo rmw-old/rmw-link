@@ -8,7 +8,7 @@ use std::{
 };
 use time::sec;
 use twox_hash::xxh3::{hash128, hash64};
-use x25519_dalek::{PublicKey as X25519PublicKey, SharedSecret, StaticSecret};
+use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
 pub struct Recv<Addr: ToAddr> {
   pub udp: UdpSocket,
@@ -112,7 +112,7 @@ impl<Addr: ToAddr> Recv<Addr> {
     if msg_len == 0 {
       if self.ping.has(addr) {
         println!("{} > ping reply", addr);
-        reply!(Cmd::Ping, &self.pk(), &sec().to_le_bytes())
+        reply!(Cmd::Ping, self.pk(), &sec().to_le_bytes())
       }
     } else if let Ok(cmd) = Cmd::try_from(msg[0]) {
       println!("{} {:?} > {}", addr, &cmd, &msg.len());
@@ -170,7 +170,9 @@ impl<Addr: ToAddr> Recv<Addr> {
                 && (hash_token.leading_zeros() >= PING_TOKEN_LEADING_ZERO)
               {
                 let rpk = keygen::public_key_from_bytes(&rpk);
-                if let Ok(_) = rpk.verify_strict(&hash_time, &Signature::from_bytes(&sign).unwrap())
+                if rpk
+                  .verify_strict(&hash_time, &Signature::from_bytes(&sign).unwrap())
+                  .is_ok()
                 {
                   let xpk: X25519PublicKey = (&rpk).into();
                   let xsecret = secret.diffie_hellman(&xpk);
