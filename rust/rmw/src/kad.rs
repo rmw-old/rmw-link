@@ -1,7 +1,12 @@
 use crate::typedef::ToAddr;
 use array_init::array_init;
 use smallvec::SmallVec;
-use std::{cmp::min, collections::BTreeSet, io::Write, ops::RangeInclusive};
+use std::{
+  cmp::min,
+  collections::{BTreeMap, BTreeSet},
+  io::Write,
+  ops::RangeInclusive,
+};
 
 pub const LEN: usize = 128;
 pub const CAPACITY: usize = 32;
@@ -34,6 +39,7 @@ pub struct Kad<Addr: ToAddr> {
   pub cache: SmallVec<[Box<[u8]>; NODE_LEN]>,
   pub key: u128,
   pub node: SmallVec<[BTreeSet<Node<Addr>>; NODE_LEN]>,
+  pub addr: BTreeMap<Addr, u8>,
 }
 
 impl<Addr: ToAddr> Kad<Addr> {
@@ -47,6 +53,7 @@ impl<Addr: ToAddr> Kad<Addr> {
       key: u128::from_be_bytes(key[..16].try_into().unwrap()),
       node: SmallVec::from_elem(BTreeSet::new(), 1),
       cache: SmallVec::from_elem(unsafe { Box::<[u8]>::new_uninit_slice(0).assume_init() }, 1),
+      addr: BTreeMap::new(),
     }
   }
 
@@ -61,6 +68,13 @@ impl<Addr: ToAddr> Kad<Addr> {
     let depth = (self.key ^ pk).leading_zeros() as u8;
     let node = &mut self.node;
     let max = node.len() - 1;
+    if let Some(&d) = self.addr.get(&addr) {
+      if d == depth {
+        return false;
+      }
+      node[min(d as usize, max)].remove(&Node { addr, depth: d });
+    }
+
     let max_u8 = max as u8;
     let insert;
     if depth >= max_u8 {
@@ -71,6 +85,9 @@ impl<Addr: ToAddr> Kad<Addr> {
         //dbg!((max, self.cache.len() - 1, &li, &new));
         cache_update!(pos, li);
         let result = new.insert(Node { depth, addr });
+        if result {
+          self.addr.insert(addr, depth);
+        }
         self.cache.push(bin!(new));
         node.push(new);
         return result;
@@ -83,6 +100,7 @@ impl<Addr: ToAddr> Kad<Addr> {
     let li = &mut node[insert];
     if li.len() < CAPACITY && li.insert(Node { depth, addr }) {
       cache_update!(insert, li);
+      self.addr.insert(addr, depth);
       return true;
     }
 
