@@ -3,7 +3,7 @@ use array_init::array_init;
 use smallvec::SmallVec;
 use std::{cmp::min, collections::BTreeSet, io::Write, ops::RangeInclusive};
 
-const LEN: usize = 128;
+pub const LEN: usize = 128;
 pub const CAPACITY: usize = 32;
 const NODE_LEN: usize = LEN - 5; // 1+2+4+8+16 = 31 , 相同的key不可能出现
 

@@ -1,6 +1,6 @@
 use crate::{
   cmd::Cmd,
-  kad::{Kad, CAPACITY},
+  kad::{Kad, CAPACITY, LEN},
   midpoint,
   recv::Boot,
   typedef::ToAddr,
@@ -35,10 +35,11 @@ pub async fn kad_net<Addr: ToAddr + addrbytes::FromBytes<Addr>>(
       } else {
         // 以太坊p2p网络(二)：以太坊P2P节点发现算法原理剖析 https://blog.csdn.net/guidao13/article/details/82798422
         info!("连接更多的端口，直到没有新的，清理rocksdb; 查找随机节点；填充kad");
+
+        let max = &kad.lock().node.len()-1;
+
+
         /*
-          let kad = kad.lock();
-          let node = &kad.node;
-          let max = node.len() - 1;
           for (pos, li) in node.iter().enumerate() {
             let len  = li.len();
             if len != CAPACITY {
