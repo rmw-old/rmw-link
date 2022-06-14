@@ -1,5 +1,4 @@
 use crate::{cmd::Cmd, kad::Kad, midpoint, recv::Boot, typedef::ToAddr, util::udp::send_to};
-use addrbytes::ToBytes;
 use expire_map::ExpireMap;
 use kv::Kv;
 use log::info;
@@ -31,20 +30,23 @@ pub async fn kad_net<Addr: ToAddr + addrbytes::FromBytes<Addr>>(
         info!("连接更多的端口，直到没有新的，清理rocksdb; 查找随机节点；填充kad");
 
         let key = kad.lock().key;
-        let key_li = [key.to_be_bytes(),(!key).to_be_bytes()];
+        let node = &kad.lock().node;
+        let max = node.len() - 1;
 
-        for li in &kad.lock().node {
+        for (pos,li) in node.iter().enumerate() {
           for i in li {
             let addr = &i.addr;
-            for key in key_li{
-              if let Ok(Some(v)) = kv.addr_sk_encrypt(&addr.to_bytes(),&key) {
-                dbg!(v.len());
-                let msg = [
-                  &[Cmd::FindNode as u8][..],
-                  &v
-                ].concat();
-                send_to(&udp,&msg,addr)
-              }
+            let find = if pos == max { key } else {
+              let rp = &range[pos];
+              midpoint!(rp.start(),rp.end())
+            }.to_be_bytes();
+            if let Ok(Some(v)) = kv.addr_sk_encrypt(&addr.to_bytes(),&find) {
+              dbg!(v.len());
+              let msg = [
+                &[Cmd::FindNode as u8][..],
+                &v
+              ].concat();
+              send_to(&udp,&msg,addr)
             }
           }
         }
