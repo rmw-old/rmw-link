@@ -33,23 +33,24 @@ pub async fn kad_net<Addr: ToAddr + addrbytes::FromBytes<Addr>>(
       if is_empty {
         sleep(30).await;
       } else {
-        info!("连接更多的端口，直到没有新的，清理rocksdb");
+        info!("连接更多的端口，直到没有新的，清理rocksdb; 查找随机节点；填充kad");
 
-        let kad = kad.lock();
-        let node = &kad.node;
-        let max = node.len() - 1;
-        for (pos, li) in node.iter().enumerate() {
-          if li.len() != CAPACITY {
-            let key = if pos == max {
-              kad.key
-            } else {
-              let rp = &range[pos];
-              midpoint!(rp.start(), rp.end())
-            }
-            dbg!(pos, key)
-          }
-        }
-
+        /*
+                let kad = kad.lock();
+                let node = &kad.node;
+                let max = node.len() - 1;
+                for (pos, li) in node.iter().enumerate() {
+                  let len  = li.len();
+                  if len != CAPACITY {
+                    let key = if pos == max {
+                      kad.key
+                    } else {
+                      let rp = &range[pos];
+                      midpoint!(rp.start(), rp.end())
+                    }
+                  }
+                }
+        */
         sleep(60).await;
       }
     }};
