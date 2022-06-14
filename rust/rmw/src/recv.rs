@@ -267,7 +267,7 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
             let kad = &self.kad.lock();
             for i in li {
               if !kad.addr.contains_key(&i) {
-                dbg!(i);
+                dbg!(("todo ping", i));
               }
             }
           }
