@@ -1,11 +1,5 @@
-use crate::{
-  cmd::Cmd,
-  kad::{Kad, CAPACITY, LEN},
-  midpoint,
-  recv::Boot,
-  typedef::ToAddr,
-  util::udp::send_to,
-};
+use crate::{cmd::Cmd, kad::Kad, midpoint, recv::Boot, typedef::ToAddr, util::udp::send_to};
+use addrbytes::ToBytes;
 use expire_map::ExpireMap;
 use kv::Kv;
 use log::info;
@@ -41,9 +35,15 @@ pub async fn kad_net<Addr: ToAddr + addrbytes::FromBytes<Addr>>(
 
         for li in &kad.lock().node {
           for i in li {
+            let addr = &i.addr;
             for key in key_li{
-              if let Ok(Some(v)) = kv.addr_sk_encrypt(&i.addr.to_bytes(),&key) {
-                dbg!(v);
+              if let Ok(Some(v)) = kv.addr_sk_encrypt(&addr.to_bytes(),&key) {
+                dbg!(v.len());
+                let msg = [
+                  &[Cmd::FindNode as u8][..],
+                  &v
+                ].concat();
+                send_to(&udp,&msg,addr)
               }
             }
           }
