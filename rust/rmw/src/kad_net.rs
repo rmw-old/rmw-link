@@ -1,6 +1,7 @@
 use crate::{
   cmd::Cmd,
   kad::{Kad, CAPACITY},
+  midpoint,
   recv::Boot,
   typedef::ToAddr,
   util::udp::send_to,
@@ -33,12 +34,22 @@ pub async fn kad_net<Addr: ToAddr + addrbytes::FromBytes<Addr>>(
         sleep(30).await;
       } else {
         info!("连接更多的端口，直到没有新的，清理rocksdb");
-        for (pos, i) in (&kad.lock()).node.iter().enumerate() {
-          if i.len() != CAPACITY {
-            let rp = &range[pos];
-            dbg!((pos, rp.start(), rp.end()));
+
+        let kad = kad.lock();
+        let node = &kad.node;
+        let max = node.len() - 1;
+        for (pos, li) in node.iter().enumerate() {
+          if li.len() != CAPACITY {
+            let key = if pos == max {
+              kad.key
+            } else {
+              let rp = &range[pos];
+              midpoint!(rp.start(), rp.end())
+            }
+            dbg!(pos, key)
           }
         }
+
         sleep(60).await;
       }
     }};
