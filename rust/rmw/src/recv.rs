@@ -263,7 +263,13 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
         Cmd::FindedNode => {
           let kv = self.kv.clone();
           if let Ok(Some(msg)) = kv.addr_sk_decrypt(&src.to_bytes(), &msg[1..]) {
-            dbg!(Addr::vec_from_bytes(msg));
+            let li = Addr::vec_from_bytes(msg);
+            let kad = &self.kad.lock();
+            for i in li {
+              if !kad.addr.contains_key(&i) {
+                dbg!(i);
+              }
+            }
           }
         }
       }
