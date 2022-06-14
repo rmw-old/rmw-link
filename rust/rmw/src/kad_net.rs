@@ -39,7 +39,7 @@ pub async fn kad_net<Addr: ToAddr + addrbytes::FromBytes<Addr>>(
             dbg!((pos, rp.start(), rp.end()));
           }
         }
-        break;
+        sleep(60).await;
       }
     }};
   }
