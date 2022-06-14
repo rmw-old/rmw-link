@@ -1,0 +1,24 @@
+[package]
+name = "kv"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+anyhow = "1.0.57"
+librocksdb-sys = { path = "../lib/rocksdb/librocksdb-sys" }
+time = { path = "../time" }
+addrbytes = { path = "../addrbytes" }
+err = { path = "../err" }
+id = { path = "../id" }
+num_cpus = "1.13.1"
+paste = "1.0.7"
+rocksdb = { path = "../lib/rocksdb", features = [
+  "zstd",
+  "lz4"
+], default-features = false }
+ordered-varint = "1.0.1"
+parking_lot = "0.12.1"
+smallvec = "1.8.0"
+once_cell = "1.12.0"
+xxblake3 = "0.0.6"

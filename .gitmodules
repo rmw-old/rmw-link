@@ -1,0 +1,9 @@
+[submodule "rust/speedy"]
+	path = rust/lib/speedy
+	url = git@github.com:rmw-lib/speedy.git
+[submodule "rust/lib/rocksdb"]
+	path = rust/lib/rocksdb
+	url = git@github.com:gcxfd/rust-rocksdb.git
+[submodule "rust/lib/blake3_merkle"]
+	path = rust/lib/blake3_merkle
+	url = git@github.com:rmw-lib/blake3_merkle.git

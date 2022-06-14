@@ -1,0 +1,10 @@
+[package]
+name = "config"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dir = { path = "../dir" }
+lazy_static = "1.4.0"
+log = "0.4.17"
+rmw_str = "0.0.7"
