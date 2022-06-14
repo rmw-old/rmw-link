@@ -37,9 +37,17 @@ pub async fn kad_net<Addr: ToAddr + addrbytes::FromBytes<Addr>>(
         info!("连接更多的端口，直到没有新的，清理rocksdb; 查找随机节点；填充kad");
 
         let key = kad.lock().key;
-        dbg!(key);
-        dbg!(!key);
+        let key_li = [key.to_be_bytes(),(!key).to_be_bytes()];
 
+        for li in &kad.lock().node {
+          for i in li {
+            for key in key_li{
+              if let Ok(Some(v)) = kv.addr_sk_encrypt(&i.addr.to_bytes(),&key) {
+                dbg!(v);
+              }
+            }
+          }
+        }
 
         /*
         let max = &kad.lock().node.len()-1;
