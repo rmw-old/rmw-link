@@ -36,23 +36,27 @@ pub async fn kad_net<Addr: ToAddr + addrbytes::FromBytes<Addr>>(
         // 以太坊p2p网络(二)：以太坊P2P节点发现算法原理剖析 https://blog.csdn.net/guidao13/article/details/82798422
         info!("连接更多的端口，直到没有新的，清理rocksdb; 查找随机节点；填充kad");
 
-        let max = &kad.lock().node.len()-1;
+        let key = kad.lock().key;
+        dbg!(key);
+        dbg!(!key);
 
 
         /*
-          for (pos, li) in node.iter().enumerate() {
-            let len  = li.len();
-            if len != CAPACITY {
-              let key = if pos == max {
-                kad.key
-              } else {
-                let rp = &range[pos];
-                midpoint!(rp.start(), rp.end())
-              }
+        let max = &kad.lock().node.len()-1;
+        for (pos, li) in node.iter().enumerate() {
+          let len  = li.len();
+          if len != CAPACITY {
+            let key = if pos == max {
+              kad.key
+            } else {
+              let rp = &range[pos];
+              midpoint!(rp.start(), rp.end())
             }
           }
-        */
+        }
         sleep(60).await;
+        */
+        break;
       }
     }};
   }
