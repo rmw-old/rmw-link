@@ -1,3 +1,4 @@
+
 1. 利用 kv 的 alive_addr 做定期检查和超时清理
 2. 任务编号和回调，u32，初始为随机
 
@@ -18,3 +19,5 @@ enum Knob {
     LinearKnob,
     LogarithmicKnob,
 }
+
+请求 - 响应 - await timeout
