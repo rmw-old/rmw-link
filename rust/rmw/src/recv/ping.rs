@@ -25,13 +25,13 @@ pub struct Ping<Addr: ToAddr> {
   pub secret: StaticSecret,
   pub key: Keypair,
   pub sk_hash: [u8; 16],
-  pub timer: JoinHandle<()>,
+  pub timer: ManuallyDrop<JoinHandle<()>>,
   pub kv: Arc<Kv>,
 }
 impl<Addr: ToAddr> Drop for Ping<Addr> {
   fn drop(&mut self) {
     let mut timer = unsafe { MaybeUninit::uninit().assume_init() };
-    swap(&mut timer, &mut self.timer);
+    swap(&mut timer, &mut *self.timer);
     timer.cancel();
   }
 }
@@ -65,7 +65,7 @@ impl<Addr: ToAddr> Ping<Addr> {
       sk_hash: hash128_bytes(key.secret.as_bytes()),
       key,
       secret,
-      timer,
+      timer: ManuallyDrop::new(timer),
     }
   }
   pub fn recv(&self, input: Input<Addr>) {}
