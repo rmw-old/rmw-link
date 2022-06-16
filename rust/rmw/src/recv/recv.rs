@@ -19,53 +19,23 @@ use std::{
   net::UdpSocket,
   sync::Arc,
 };
-use twox_hash::xxh3::{hash128, hash64};
 
 pub struct Recv<Addr: ToAddr> {
-  pub timer: ManuallyDrop<[JoinHandle<()>; 1]>,
   pub udp: UdpSocket,
   pub ping: Ping<Addr>,
-  //pub kv: Arc<Kv>,
-  //pub db: db::Db,
-  pub kad: Arc<Mutex<Kad<Addr>>>,
 }
 
 pub const VERSION: &[u8] = &var::VERSION.to_le_bytes();
-
-impl<Addr: ToAddr> Drop for Recv<Addr> {
-  fn drop(&mut self) {
-    let mut timer = unsafe { mem::MaybeUninit::uninit().assume_init() };
-    mem::swap(&mut timer, &mut *self.timer);
-    timer.map(|i| task::spawn(i.cancel()));
-  }
-}
-
 pub trait Boot<Addr> = Fn() -> Vec<Addr> + 'static + Send;
 
 impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
   pub fn new(db: db::Db, kv: Kv, udp: UdpSocket, boot: impl Boot<Addr> + Sync) -> Self {
     let kv = Arc::new(kv);
-    let ping = Ping::new(kv.clone());
-    let kad = Arc::new(Mutex::new(Kad::new(ping.key.public.as_bytes())));
+    let ping = Ping::new(kv, udp.try_clone().unwrap(), boot);
 
     Self {
-      timer: ManuallyDrop::new([
-        /*
-        task::spawn(
-        async move { ip_sk_expire.monitor(2, 0, Duration::from_secs(3)).await },
-        ),
-        */
-        task::spawn(kad_net(
-          kad.clone(),
-          boot,
-          udp.try_clone().unwrap(),
-          kv.clone(),
-          ping.expire.clone(),
-        )),
-      ]),
       //kv,
       //db,
-      kad,
       udp,
       ping,
     }

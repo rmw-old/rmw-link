@@ -1,23 +1,29 @@
 use crate::{
   hash128_bytes,
+  kad::Kad,
+  kad_net::kad_net,
   key::{self, hash128_bytes},
   pool::spawn,
+  recv::recv::Boot,
   typedef::ToAddr,
   util::udp::{send_to, Input},
   var::{self, EXPIRE, PING},
 };
+use addrbytes::FromBytes;
 use async_std::task::{self, JoinHandle};
 use ed25519_dalek_blake3::{Keypair, Signature, Signer};
 use expire_map::ExpireMap;
 use kv::Kv;
 use log::info;
+use parking_lot::Mutex;
 use std::{
   mem::{swap, ManuallyDrop, MaybeUninit},
   net::{ToSocketAddrs, UdpSocket},
   sync::Arc,
 };
 use time::sec;
-use x25519_dalek::StaticSecret;
+use twox_hash::xxh3::{hash128, hash64};
+use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
 const PING_TOKEN_LEADING_ZERO: u32 = 16;
 pub const VERSION: &[u8] = &var::VERSION.to_le_bytes();
@@ -27,15 +33,16 @@ pub struct Ping<Addr: ToAddr> {
   pub secret: StaticSecret,
   pub key: Keypair,
   pub sk_hash: [u8; 16],
-  pub timer: ManuallyDrop<JoinHandle<()>>,
   pub kv: Arc<Kv>,
+  pub kad: Arc<Mutex<Kad<Addr>>>,
+  pub timer: ManuallyDrop<[JoinHandle<()>; 2]>,
 }
 
 impl<Addr: ToAddr> Drop for Ping<Addr> {
   fn drop(&mut self) {
     let mut timer = unsafe { MaybeUninit::uninit().assume_init() };
     swap(&mut timer, &mut *self.timer);
-    task::spawn(timer.cancel());
+    timer.map(|i| task::spawn(i.cancel()));
   }
 }
 
@@ -49,7 +56,7 @@ fn sk_hash<Addr: ToAddr>(hash: &[u8], now: &[u8], addr: &Addr, msg: &[u8]) -> [u
   hash128_bytes!(hash, now, &addr.to_bytes(), msg)
 }
 
-impl<Addr: ToAddr> Ping<Addr> {
+impl<Addr: ToAddr + FromBytes<Addr>> Ping<Addr> {
   fn sk_hash(&self, now: &[u8], addr: &Addr, msg: &[u8]) -> [u8; 16] {
     sk_hash(&self.sk_hash, now, addr, msg)
   }
@@ -58,17 +65,22 @@ impl<Addr: ToAddr> Ping<Addr> {
     pk!(self.key)
   }
 
-  pub fn new(kv: Arc<Kv>) -> Self {
+  pub fn new(kv: Arc<Kv>, udp: UdpSocket, boot: impl Boot<Addr> + Sync) -> Self {
     let key = key::new(&kv);
     let secret: StaticSecret = (&key.secret).into();
-    let (expire, timer) = ExpireMap::new(*EXPIRE, |&addr| info!("expire {:?}", addr));
+    let (expire, expire_timer) = ExpireMap::new(*EXPIRE, |&addr| info!("expire {:?}", addr));
+    let kad = Arc::new(Mutex::new(Kad::new(key.public.as_bytes())));
     Self {
+      timer: ManuallyDrop::new([
+        expire_timer,
+        task::spawn(kad_net(kad.clone(), boot, udp, kv.clone(), expire.clone())),
+      ]),
       kv,
+      kad,
       expire,
       sk_hash: hash128_bytes(key.secret.as_bytes()),
       key,
       secret,
-      timer: ManuallyDrop::new(timer),
     }
   }
   pub fn pong(&self, udp: &UdpSocket, addr: &Addr) -> bool {
@@ -82,7 +94,17 @@ impl<Addr: ToAddr> Ping<Addr> {
     }
   }
   pub fn recv(&self, input: Input<Addr>) {
+    let addr = input.addr;
     let msg = input.msg;
+    macro_rules! kad_add {
+      ($kad:expr,$pk_bytes:expr,$kv:expr,$xsecret:expr) => {{
+        let bytes = &addr.to_bytes();
+        if $kad.lock().add(&$pk_bytes, addr) {
+          err::log($kv.addr_pk_set(bytes, &$pk_bytes));
+        }
+        err::log($kv.addr_sk_set(bytes, $xsecret));
+      }};
+    }
     match msg.len() {
       0 => input.reply(&[]),
       32 => {
@@ -91,17 +113,17 @@ impl<Addr: ToAddr> Ping<Addr> {
         if pk != self.pk() {
           let now = sec().to_le_bytes();
           //  16 + 8 = 24
-          input.reply(&[&PING[..], &self.sk_hash(&now, &input.addr, &pk), &now].concat())
+          input.reply(&[&PING[..], &self.sk_hash(&now, &addr, &pk), &now].concat())
         }
       }
       24 => {
-        let addr = input.addr;
         if self.expire.has(&addr) {
           let key = self.key.clone();
           let udp = input.udp.try_clone().unwrap();
           let hash_time: [u8; 24] = msg.try_into().unwrap();
           spawn(move || {
-            udp.send_to(
+            send_to(
+              &udp,
               &[
                 &PING[..],
                 pk!(key),
@@ -115,6 +137,49 @@ impl<Addr: ToAddr> Ping<Addr> {
           });
         }
       }
+      msg_len if msg_len >= 118 => {
+        let key = self.key.clone();
+        let udp = input.udp.try_clone().unwrap();
+        let rpk_bytes: [u8; 30] = msg[..30].try_into().unwrap();
+        let sign: [u8; 64] = msg[30..94].try_into().unwrap();
+        let hash_time: [u8; 24] = msg[94..118].try_into().unwrap();
+        let hash_token = hash64(&msg[94..]);
+
+        let sk = self.sk_hash;
+        let secret = self.secret.clone();
+        let kv = self.kv.clone();
+        let kad = self.kad.clone();
+
+        spawn(move || {
+          let pk = pk!(key);
+          let hash: [u8; 16] = hash_time[..16].try_into().unwrap();
+          let time_bytes = hash_time[16..].try_into().unwrap();
+          let now = sec();
+          let time = u64::from_le_bytes(time_bytes);
+          if (time <= now)
+            && ((now - time) <= *EXPIRE as _)
+            && (sk_hash(&sk, &time_bytes, &addr, &rpk_bytes) == hash)
+            && (hash_token.leading_zeros() >= PING_TOKEN_LEADING_ZERO)
+          {
+            let rpk = keygen::public_key_from_bytes(&rpk_bytes);
+            if rpk
+              .verify_strict(&hash_time, &Signature::from_bytes(&sign).unwrap())
+              .is_ok()
+            {
+              let xpk: X25519PublicKey = (&rpk).into();
+              let xsecret = secret.diffie_hellman(&xpk);
+              let xsecret = xsecret.as_bytes();
+
+              kad_add!(kad, rpk_bytes, kv, xsecret);
+              send_to(
+                &udp,
+                &[&PING[..], pk, &hash128(xsecret).to_le_bytes()].concat(),
+                addr,
+              )
+            }
+          }
+        })
+      }
       _ => {}
     }
   }
@@ -122,15 +187,6 @@ impl<Addr: ToAddr> Ping<Addr> {
 /*
    println!("{} {:?} > {}", addr, &cmd, &msg.len());
 
-   macro_rules! kad_add {
-   ($kad:expr,$pk_bytes:expr,$kv:expr,$xsecret:expr) => {{
-   let src_bytes = &src.to_bytes();
-   if $kad.lock().add(&$pk_bytes, src) {
-   err::log($kv.addr_pk_set(src_bytes, &$pk_bytes));
-   }
-   err::log($kv.addr_sk_set(src_bytes, $xsecret));
-   }};
-   }
 
    match cmd {
    Cmd::Ping => match msg_len {
