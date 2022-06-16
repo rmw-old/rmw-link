@@ -25,7 +25,6 @@ pub struct Recv<Addr: ToAddr> {
   pub ping: Ping<Addr>,
 }
 
-pub const VERSION: &[u8] = &var::VERSION.to_le_bytes();
 pub trait Boot<Addr> = Fn() -> Vec<Addr> + 'static + Send;
 
 impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
