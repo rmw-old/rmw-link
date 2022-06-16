@@ -1,11 +1,12 @@
 use crate::{
   hash128_bytes,
   key::{self, hash128_bytes},
+  pool::spawn,
   typedef::ToAddr,
   util::udp::{send_to, Input},
   var::{self, EXPIRE, PING},
 };
-use async_std::task::{self, spawn, JoinHandle};
+use async_std::task::{self, JoinHandle};
 use ed25519_dalek_blake3::{Keypair, Signature, Signer};
 use expire_map::ExpireMap;
 use kv::Kv;
@@ -29,11 +30,12 @@ pub struct Ping<Addr: ToAddr> {
   pub timer: ManuallyDrop<JoinHandle<()>>,
   pub kv: Arc<Kv>,
 }
+
 impl<Addr: ToAddr> Drop for Ping<Addr> {
   fn drop(&mut self) {
     let mut timer = unsafe { MaybeUninit::uninit().assume_init() };
     swap(&mut timer, &mut *self.timer);
-    spawn(timer.cancel());
+    task::spawn(timer.cancel());
   }
 }
 
@@ -88,8 +90,29 @@ impl<Addr: ToAddr> Ping<Addr> {
         let pk: [u8; 30] = msg[2..32].try_into().unwrap();
         if pk != self.pk() {
           let now = sec().to_le_bytes();
-          // 1 + 16 + 8 = 25
+          //  16 + 8 = 24
           input.reply(&[&PING[..], &self.sk_hash(&now, &input.addr, &pk), &now].concat())
+        }
+      }
+      24 => {
+        let addr = input.addr;
+        if self.expire.has(&addr) {
+          let key = self.key.clone();
+          let udp = input.udp.try_clone().unwrap();
+          let hash_time: [u8; 24] = msg.try_into().unwrap();
+          spawn(move || {
+            udp.send_to(
+              &[
+                &PING[..],
+                pk!(key),
+                &key.sign(&hash_time).to_bytes(),
+                &hash_time,
+                &crate::util::leading_zero::find(PING_TOKEN_LEADING_ZERO, &hash_time),
+              ]
+              .concat(),
+              addr,
+            );
+          });
         }
       }
       _ => {}
@@ -97,25 +120,25 @@ impl<Addr: ToAddr> Ping<Addr> {
   }
 }
 /*
-     println!("{} {:?} > {}", addr, &cmd, &msg.len());
+   println!("{} {:?} > {}", addr, &cmd, &msg.len());
 
-     macro_rules! kad_add {
-     ($kad:expr,$pk_bytes:expr,$kv:expr,$xsecret:expr) => {{
-     let src_bytes = &src.to_bytes();
-     if $kad.lock().add(&$pk_bytes, src) {
-     err::log($kv.addr_pk_set(src_bytes, &$pk_bytes));
-     }
-     err::log($kv.addr_sk_set(src_bytes, $xsecret));
-     }};
-     }
+   macro_rules! kad_add {
+   ($kad:expr,$pk_bytes:expr,$kv:expr,$xsecret:expr) => {{
+   let src_bytes = &src.to_bytes();
+   if $kad.lock().add(&$pk_bytes, src) {
+   err::log($kv.addr_pk_set(src_bytes, &$pk_bytes));
+   }
+   err::log($kv.addr_sk_set(src_bytes, $xsecret));
+   }};
+   }
 
-     match cmd {
-     Cmd::Ping => match msg_len {
-     1 => reply!(&[]),
-     33 => {
-     let pk: [u8; 30] = msg[3..33].try_into().unwrap();
-     if pk != self.pk() {
-     let now = sec().to_le_bytes();
+   match cmd {
+   Cmd::Ping => match msg_len {
+   1 => reply!(&[]),
+   33 => {
+   let pk: [u8; 30] = msg[3..33].try_into().unwrap();
+   if pk != self.pk() {
+   let now = sec().to_le_bytes();
 // 1 + 16 + 8 = 25
 reply!(Cmd::Ping, &self.sk_hash(&now, addr, &pk), &now)
 }
@@ -167,13 +190,13 @@ if rpk
 .is_ok()
 {
 let xpk: X25519PublicKey = (&rpk).into();
-  let xsecret = secret.diffie_hellman(&xpk);
-  let xsecret = xsecret.as_bytes();
+let xsecret = secret.diffie_hellman(&xpk);
+let xsecret = xsecret.as_bytes();
 
-  kad_add!(kad, rpk_bytes, kv, xsecret);
+kad_add!(kad, rpk_bytes, kv, xsecret);
 
-  send_to!(udp, Cmd::Ping, pk, &hash128(xsecret).to_le_bytes())
-}
+send_to!(udp, Cmd::Ping, pk, &hash128(xsecret).to_le_bytes())
+  }
 }
 })
 }
