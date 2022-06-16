@@ -29,7 +29,7 @@ use twox_hash::xxh3::{hash128, hash64};
 use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
 pub struct Recv<Addr: ToAddr> {
-  pub timer: ManuallyDrop<[JoinHandle<()>; 2]>,
+  pub timer: ManuallyDrop<[JoinHandle<()>; 1]>,
   pub udp: UdpSocket,
   pub ping: Ping<Addr>,
   pub key: Keypair,
@@ -70,6 +70,7 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
 
     let kad = Arc::new(Mutex::new(Kad::new(key.public.as_bytes())));
     let kv = Arc::new(kv);
+    let ping = Ping::new();
 
     let secret: StaticSecret = (&key.secret).into();
     Self {
@@ -79,20 +80,18 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
         async move { ip_sk_expire.monitor(2, 0, Duration::from_secs(3)).await },
         ),
         */
-        timer_expire_map,
         task::spawn(kad_net(
           kad.clone(),
           boot,
           udp.try_clone().unwrap(),
           kv.clone(),
-          ping.clone(),
+          ping.expire.clone(),
         )),
       ]),
       kv,
       db,
       kad,
       udp,
-      //ip_sk,
       ping,
       sk_hash: hash128_bytes(key.secret.as_bytes()),
       key,
@@ -144,12 +143,12 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
     } else if msg_len >= 4 {
       let id = u32::from_le_bytes(msg[..4].try_into().unwrap());
       let input = Input {
-        addr,
+        addr: src,
         udp: &self.udp,
         msg: &msg[4..],
       };
       if id == 0 {
-        ping(input)
+        self.ping.recv(input)
       }
       /*
              println!("{} {:?} > {}", addr, &cmd, &msg.len());
