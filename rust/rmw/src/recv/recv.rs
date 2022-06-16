@@ -105,14 +105,16 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
       self.ping.pong(udp, addr);
       // TODO if kad as return xxx 心跳
     } else if msg_len >= 4 {
-      let id = u32::from_le_bytes(msg[..4].try_into().unwrap());
       let input = Input {
         addr: src,
         udp: &self.udp,
         msg: &msg[4..],
       };
-      if id == 0 {
-        self.ping.recv(input)
+      match u32::from_le_bytes(msg[..4].try_into().unwrap()) {
+        0 => self.ping.recv(input),
+        id => {
+          dbg!(id)
+        }
       }
       /*
              println!("{} {:?} > {}", addr, &cmd, &msg.len());
