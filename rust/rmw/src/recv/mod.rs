@@ -1,5 +1,4 @@
 mod ping;
-
 use crate::{
   hash128_bytes,
   kad::Kad,
@@ -8,7 +7,7 @@ use crate::{
   key::hash128_bytes,
   pool::spawn,
   typedef::ToAddr,
-  util::udp::send_to,
+  util::udp::{send_to, Input},
   var::{self, PING},
 };
 use addrbytes::FromBytes;
@@ -20,6 +19,7 @@ use expire_map::ExpireMap;
 use kv::Kv;
 use log::info;
 use parking_lot::Mutex;
+use ping::ping;
 use std::{
   mem::{self, ManuallyDrop},
   net::UdpSocket,
@@ -146,7 +146,16 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
         reply!(&PING, VERSION, self.pk())
       }
       // TODO if kad as return xxx 心跳
-    } else if msg_len > 4 {
+    } else if msg_len >= 4 {
+      let id = u32::from_le_bytes(msg[..4].try_into().unwrap());
+      let input = Input {
+        addr,
+        udp: &self.udp,
+        msg: &msg[4..],
+      };
+      if id == 0 {
+        ping(input)
+      }
       /*
              println!("{} {:?} > {}", addr, &cmd, &msg.len());
 

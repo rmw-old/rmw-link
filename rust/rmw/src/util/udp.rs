@@ -5,12 +5,13 @@ pub fn send_to<Addr: ToSocketAddrs>(udp: &UdpSocket, msg: &[u8], addr: Addr) {
 }
 
 #[derive(Debug)]
-pub struct Recv<'a, Addr: ToSocketAddrs> {
-  addr: Addr,
-  udp: &'a UdpSocket,
+pub struct Input<'a, Addr: ToSocketAddrs> {
+  pub addr: Addr,
+  pub udp: &'a UdpSocket,
+  pub msg: &'a [u8],
 }
 
-impl<Addr: ToSocketAddrs> Recv<'_, Addr> {
+impl<Addr: ToSocketAddrs> Input<'_, Addr> {
   pub fn reply(&self, msg: &[u8]) {
     send_to(self.udp, msg, &self.addr)
   }
