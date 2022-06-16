@@ -71,49 +71,23 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
     }
   }
 
-  pub fn recv(&self, msg: &[u8], src: Addr) -> Result<()> {
+  pub fn recv(&self, msg: &[u8], addr: Addr) -> Result<()> {
     let msg_len = msg.len();
-    let addr = &src;
     let udp = &self.udp;
-    //dbg!(self.cf.pk.put(&[1, 2, 3], &[5, 6]))?;
-    //dbg!(self.cf.pk.get(&[1, 2, 3]))?;
-
-    macro_rules! send_to {
-      ($udp:expr,$bin:expr) => {{
-        send_to(&$udp,$bin,src);
-      }};
-      ($udp:expr,$($bin:expr),+) => {{
-        send_to!(
-          $udp,
-          &[
-          $($bin),+
-          ].concat()
-        )
-      }};
-    }
-
-    macro_rules! reply {
-      ($bin:expr) => {{
-        send_to!(udp,$bin)
-      }};
-      ($cmd:expr,$($bin:expr),+) => {{
-        send_to!(udp,$cmd,$($bin),+)
-      }}
-    }
 
     if msg_len == 0 {
-      self.ping.pong(udp, addr);
+      self.ping.pong(udp, &addr);
       // TODO if kad as return xxx 心跳
     } else if msg_len >= 4 {
       let input = Input {
-        addr: src,
+        addr,
         udp: &self.udp,
         msg: &msg[4..],
       };
       match u32::from_le_bytes(msg[..4].try_into().unwrap()) {
         0 => self.ping.recv(input),
         id => {
-          dbg!(id)
+          dbg!(id);
         }
       }
       /*
