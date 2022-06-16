@@ -1,10 +1,8 @@
 mod ping;
 use crate::{
-  hash128_bytes,
   kad::Kad,
   kad_net::kad_net,
   key,
-  key::hash128_bytes,
   pool::spawn,
   typedef::ToAddr,
   util::udp::{send_to, Input},
@@ -14,7 +12,6 @@ use addrbytes::FromBytes;
 use addrbytes::VecFromBytes;
 use anyhow::Result;
 use async_std::task::{self, JoinHandle};
-use ed25519_dalek_blake3::{Keypair, Signature, Signer};
 use kv::Kv;
 use log::info;
 use parking_lot::Mutex;
@@ -32,10 +29,6 @@ pub struct Recv<Addr: ToAddr> {
   pub timer: ManuallyDrop<[JoinHandle<()>; 1]>,
   pub udp: UdpSocket,
   pub ping: Ping<Addr>,
-  pub key: Keypair,
-  pub sk_hash: [u8; 16],
-  pub secret: StaticSecret,
-  //pub ip_sk: Arc<Cache<Addr, SharedSecret>,
   pub kv: Arc<Kv>,
   pub db: db::Db,
   pub kad: Arc<Mutex<Kad<Addr>>>,
@@ -43,16 +36,6 @@ pub struct Recv<Addr: ToAddr> {
 
 const PING_TOKEN_LEADING_ZERO: u32 = 16;
 pub const VERSION: &[u8] = &var::VERSION.to_le_bytes();
-
-macro_rules! pk {
-  ($key:expr) => {
-    &$key.public.as_bytes()[..keygen::PK_LEN]
-  };
-}
-
-fn sk_hash<Addr: ToAddr>(hash: &[u8], now: &[u8], addr: &Addr, msg: &[u8]) -> [u8; 16] {
-  hash128_bytes!(hash, now, &addr.to_bytes(), msg)
-}
 
 impl<Addr: ToAddr> Drop for Recv<Addr> {
   fn drop(&mut self) {
@@ -67,12 +50,10 @@ pub trait Boot<Addr> = Fn() -> Vec<Addr> + 'static + Send;
 impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
   pub fn new(db: db::Db, kv: Kv, udp: UdpSocket, boot: impl Boot<Addr> + Sync) -> Self {
     let key = key::new(&kv);
-
     let kad = Arc::new(Mutex::new(Kad::new(key.public.as_bytes())));
+    let ping = Ping::new(key);
     let kv = Arc::new(kv);
-    let ping = Ping::new();
 
-    let secret: StaticSecret = (&key.secret).into();
     Self {
       timer: ManuallyDrop::new([
         /*
@@ -93,14 +74,7 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
       kad,
       udp,
       ping,
-      sk_hash: hash128_bytes(key.secret.as_bytes()),
-      key,
-      secret,
     }
-  }
-
-  fn pk(&self) -> &[u8] {
-    pk!(self.key)
   }
 
   pub fn recv(&self, msg: &[u8], src: Addr) -> Result<()> {
@@ -134,11 +108,7 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
     }
 
     if msg_len == 0 {
-      if self.ping.has(addr) {
-        println!("{} > ping reply", addr);
-        // 1 + 2 + 30  = 33
-        reply!(&PING, VERSION, self.pk())
-      }
+      self.ping.pong(udp, addr);
       // TODO if kad as return xxx 心跳
     } else if msg_len >= 4 {
       let id = u32::from_le_bytes(msg[..4].try_into().unwrap());
@@ -289,8 +259,5 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
       */
     }
     Ok(())
-  }
-  pub fn sk_hash(&self, now: &[u8], addr: &Addr, msg: &[u8]) -> [u8; 16] {
-    sk_hash(&self.sk_hash, now, addr, msg)
   }
 }
