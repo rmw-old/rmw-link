@@ -1,7 +1,6 @@
 use crate::{
   hash128_bytes,
-  kad::Kad,
-  kad_net::kad_net,
+  kad::{net::kad_net, Kad},
   key::{self, hash128_bytes},
   pool::spawn,
   recv::recv::Boot,

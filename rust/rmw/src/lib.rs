@@ -8,7 +8,6 @@
 
 mod doh;
 mod kad;
-mod kad_net;
 mod key;
 mod pool;
 mod recv;
