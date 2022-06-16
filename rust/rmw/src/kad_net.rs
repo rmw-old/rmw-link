@@ -35,8 +35,8 @@ pub async fn kad_net<Addr: ToAddr + addrbytes::FromBytes<Addr>>(
 
         for (pos,li) in node.iter().enumerate() {
           for i in li {
-            let addr = &i.addr;
-            let find = if pos == max { key } else {
+            let _addr = &i.addr;
+            let _find = if pos == max { key } else {
               let rp = &range[pos];
               midpoint!(rp.start(),rp.end())
             }.to_be_bytes();

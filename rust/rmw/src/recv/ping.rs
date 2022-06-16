@@ -18,7 +18,7 @@ use log::info;
 use parking_lot::Mutex;
 use std::{
   mem::{swap, ManuallyDrop, MaybeUninit},
-  net::{ToSocketAddrs, UdpSocket},
+  net::UdpSocket,
   sync::Arc,
 };
 use time::sec;

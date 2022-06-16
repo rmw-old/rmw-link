@@ -1,24 +1,11 @@
-use crate::{
-  kad::Kad,
-  kad_net::kad_net,
-  pool::spawn,
-  recv::ping::Ping,
-  typedef::ToAddr,
-  util::udp::{send_to, Input},
-  var::{self, PING},
-};
+use crate::{recv::ping::Ping, typedef::ToAddr, util::udp::Input};
 use addrbytes::FromBytes;
 use addrbytes::VecFromBytes;
 use anyhow::Result;
-use async_std::task::{self, JoinHandle};
+
 use kv::Kv;
-use log::info;
-use parking_lot::Mutex;
-use std::{
-  mem::{self, ManuallyDrop},
-  net::UdpSocket,
-  sync::Arc,
-};
+
+use std::{net::UdpSocket, sync::Arc};
 
 pub struct Recv<Addr: ToAddr> {
   pub udp: UdpSocket,
@@ -28,7 +15,7 @@ pub struct Recv<Addr: ToAddr> {
 pub trait Boot<Addr> = Fn() -> Vec<Addr> + 'static + Send;
 
 impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
-  pub fn new(db: db::Db, kv: Kv, udp: UdpSocket, boot: impl Boot<Addr> + Sync) -> Self {
+  pub fn new(_db: db::Db, kv: Kv, udp: UdpSocket, boot: impl Boot<Addr> + Sync) -> Self {
     let kv = Arc::new(kv);
     let ping = Ping::new(kv, udp.try_clone().unwrap(), boot);
 
