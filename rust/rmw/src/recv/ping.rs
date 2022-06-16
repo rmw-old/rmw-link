@@ -1,6 +1,6 @@
 use crate::{
   hash128_bytes,
-  key::hash128_bytes,
+  key::{self, hash128_bytes},
   typedef::ToAddr,
   util::udp::{send_to, Input},
   var::{self, EXPIRE, PING},
@@ -8,13 +8,16 @@ use crate::{
 use async_std::task::{self, JoinHandle};
 use ed25519_dalek_blake3::{Keypair, Signature, Signer};
 use expire_map::ExpireMap;
+use kv::Kv;
 use log::info;
 use std::{
   mem::{swap, ManuallyDrop, MaybeUninit},
   net::{ToSocketAddrs, UdpSocket},
+  sync::Arc,
 };
 use x25519_dalek::StaticSecret;
 
+const PING_TOKEN_LEADING_ZERO: u32 = 16;
 pub const VERSION: &[u8] = &var::VERSION.to_le_bytes();
 
 pub struct Ping<Addr: ToAddr> {
@@ -23,6 +26,7 @@ pub struct Ping<Addr: ToAddr> {
   pub key: Keypair,
   pub sk_hash: [u8; 16],
   pub timer: JoinHandle<()>,
+  pub kv: Arc<Kv>,
 }
 impl<Addr: ToAddr> Drop for Ping<Addr> {
   fn drop(&mut self) {
@@ -51,10 +55,12 @@ impl<Addr: ToAddr> Ping<Addr> {
     pk!(self.key)
   }
 
-  pub fn new(key: Keypair) -> Self {
+  pub fn new(kv: Arc<Kv>) -> Self {
+    let key = key::new(&kv);
     let secret: StaticSecret = (&key.secret).into();
     let (expire, timer) = ExpireMap::new(*EXPIRE, |&addr| info!("expire {:?}", addr));
     Self {
+      kv,
       expire,
       sk_hash: hash128_bytes(key.secret.as_bytes()),
       key,

@@ -1,7 +1,6 @@
 use crate::{
   kad::Kad,
   kad_net::kad_net,
-  key,
   pool::spawn,
   recv::ping::Ping,
   typedef::ToAddr,
@@ -31,7 +30,6 @@ pub struct Recv<Addr: ToAddr> {
   pub kad: Arc<Mutex<Kad<Addr>>>,
 }
 
-const PING_TOKEN_LEADING_ZERO: u32 = 16;
 pub const VERSION: &[u8] = &var::VERSION.to_le_bytes();
 
 impl<Addr: ToAddr> Drop for Recv<Addr> {
@@ -46,10 +44,9 @@ pub trait Boot<Addr> = Fn() -> Vec<Addr> + 'static + Send;
 
 impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
   pub fn new(db: db::Db, kv: Kv, udp: UdpSocket, boot: impl Boot<Addr> + Sync) -> Self {
-    let key = key::new(&kv);
-    let kad = Arc::new(Mutex::new(Kad::new(key.public.as_bytes())));
-    let ping = Ping::new(key);
     let kv = Arc::new(kv);
+    let ping = Ping::new(kv.clone());
+    let kad = Arc::new(Mutex::new(Kad::new(ping.key.public.as_bytes())));
 
     Self {
       timer: ManuallyDrop::new([
