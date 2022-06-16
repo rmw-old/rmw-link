@@ -98,6 +98,7 @@ impl<Addr: ToAddr + FromBytes<Addr>> Ping<Addr> {
     let msg = input.msg;
     macro_rules! kad_add {
       ($kad:expr,$pk_bytes:expr,$kv:expr,$xsecret:expr) => {{
+        dbg!(&addr);
         let bytes = &addr.to_bytes();
         if $kad.lock().add(&$pk_bytes, addr) {
           err::log($kv.addr_pk_set(bytes, &$pk_bytes));
@@ -179,6 +180,25 @@ impl<Addr: ToAddr + FromBytes<Addr>> Ping<Addr> {
             }
           }
         })
+      }
+      46 => {
+        if self.expire.pop(&addr) {
+          let rpk_bytes: [u8; 30] = msg[..30].try_into().unwrap();
+          let hash: [u8; 16] = msg[30..].try_into().unwrap();
+          let kv = self.kv.clone();
+          let secret = self.secret.clone();
+          let kad = self.kad.clone();
+
+          spawn(move || {
+            let rpk = keygen::public_key_from_bytes(&rpk_bytes);
+            let xpk: X25519PublicKey = (&rpk).into();
+            let xsecret = secret.diffie_hellman(&xpk);
+            let xsecret = xsecret.as_bytes();
+            if hash128(xsecret).to_le_bytes() == hash {
+              kad_add!(kad, rpk_bytes, kv, xsecret);
+            }
+          })
+        }
       }
       _ => {}
     }
