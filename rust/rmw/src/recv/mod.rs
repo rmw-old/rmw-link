@@ -15,11 +15,10 @@ use addrbytes::VecFromBytes;
 use anyhow::Result;
 use async_std::task::{self, JoinHandle};
 use ed25519_dalek_blake3::{Keypair, Signature, Signer};
-use expire_map::ExpireMap;
 use kv::Kv;
 use log::info;
 use parking_lot::Mutex;
-use ping::ping;
+use ping::Ping;
 use std::{
   mem::{self, ManuallyDrop},
   net::UdpSocket,
@@ -32,10 +31,9 @@ use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 pub struct Recv<Addr: ToAddr> {
   pub timer: ManuallyDrop<[JoinHandle<()>; 2]>,
   pub udp: UdpSocket,
-  pub ping: ExpireMap<Addr, (), u8>,
+  pub ping: Ping<Addr>,
   pub key: Keypair,
   pub sk_hash: [u8; 16],
-  pub expire: u8,
   pub secret: StaticSecret,
   //pub ip_sk: Arc<Cache<Addr, SharedSecret>,
   pub kv: Arc<Kv>,
@@ -69,8 +67,6 @@ pub trait Boot<Addr> = Fn() -> Vec<Addr> + 'static + Send;
 impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
   pub fn new(db: db::Db, kv: Kv, udp: UdpSocket, boot: impl Boot<Addr> + Sync) -> Self {
     let key = key::new(&kv);
-    let expire = config::get!(net / timeout / ping, 21u8);
-    let (ping, timer_expire_map) = ExpireMap::new(expire, |&addr| info!("expire {:?}", addr));
 
     let kad = Arc::new(Mutex::new(Kad::new(key.public.as_bytes())));
     let kv = Arc::new(kv);
@@ -100,7 +96,6 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
       ping,
       sk_hash: hash128_bytes(key.secret.as_bytes()),
       key,
-      expire: expire / 3,
       secret,
     }
   }
