@@ -6,7 +6,6 @@
 #![feature(trait_alias)]
 #![feature(once_cell)]
 
-mod cmd;
 mod doh;
 mod kad;
 mod kad_net;

@@ -1,4 +1,4 @@
-use crate::{cmd::Cmd, kad::Kad, midpoint, recv::Boot, typedef::ToAddr, util::udp::send_to};
+use crate::{kad::Kad, midpoint, recv::Boot, typedef::ToAddr, util::udp::send_to, var::PING};
 use expire_map::ExpireMap;
 use kv::Kv;
 use log::info;
@@ -15,7 +15,7 @@ pub async fn kad_net<Addr: ToAddr + addrbytes::FromBytes<Addr>>(
 ) {
   let send = |addr| {
     ping.add(addr, ());
-    send_to(&udp, &[Cmd::Ping as u8], addr);
+    send_to(&udp, &PING, addr);
   };
   let range = kad.lock().range();
 
@@ -41,12 +41,15 @@ pub async fn kad_net<Addr: ToAddr + addrbytes::FromBytes<Addr>>(
               midpoint!(rp.start(),rp.end())
             }.to_be_bytes();
             if let Ok(Some(v)) = kv.addr_sk_encrypt(&addr.to_bytes(),&find) {
+              //todo
+              /*
               dbg!(v.len());
               let msg = [
                 &[Cmd::FindNode as u8][..],
                 &v
               ].concat();
               send_to(&udp,&msg,addr)
+              */
             }
           }
         }
