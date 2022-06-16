@@ -1,4 +1,4 @@
-use crate::{doh, recv::Recv};
+use crate::{doh, recv::recv::Recv};
 use addrbytes::VecFromBytes;
 use anyhow::Result;
 use async_std::task::spawn;
