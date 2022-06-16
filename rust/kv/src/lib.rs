@@ -115,31 +115,32 @@ impl Kv {
   pub fn addr_sk_decrypt_encrypt(
     &self,
     addr: &[u8],
+    iv: &[u8],
     msg: &[u8],
     func: impl Fn(&[u8]) -> Box<[u8]>,
   ) -> Result<Option<Box<[u8]>>> {
     tx_cf!(self);
     if let Some(sk) = get_pinned!(addr_sk, addr) {
-      if let Some(msg) = xxblake3::decrypt(&sk, msg) {
-        return Ok(Some(xxblake3::encrypt(&sk, &func(&msg))));
+      if let Some(msg) = xxblake3::decrypt(&sk, iv, msg) {
+        return Ok(Some(xxblake3::encrypt(&sk, iv, &func(&msg))));
       }
     };
     Ok(None)
   }
 
-  pub fn addr_sk_decrypt(&self, addr: &[u8], msg: &[u8]) -> Result<Option<Box<[u8]>>> {
+  pub fn addr_sk_decrypt(&self, addr: &[u8], iv: &[u8], msg: &[u8]) -> Result<Option<Box<[u8]>>> {
     tx_cf!(self);
     let r = if let Some(sk) = get_pinned!(addr_sk, addr) {
-      xxblake3::decrypt(&sk, msg)
+      xxblake3::decrypt(&sk, iv, msg)
     } else {
       None
     };
     Ok(r)
   }
 
-  pub fn addr_sk_encrypt(&self, addr: &[u8], msg: &[u8]) -> Result<Option<Box<[u8]>>> {
+  pub fn addr_sk_encrypt(&self, addr: &[u8], iv: &[u8], msg: &[u8]) -> Result<Option<Box<[u8]>>> {
     tx_cf!(self);
-    let r = get_pinned!(addr_sk, addr).map(|sk| xxblake3::encrypt(&sk, msg));
+    let r = get_pinned!(addr_sk, addr).map(|sk| xxblake3::encrypt(&sk, iv, msg));
     Ok(r)
   }
 }
