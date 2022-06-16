@@ -12,6 +12,7 @@ mod kad_net;
 mod key;
 mod pool;
 mod recv;
+mod reply;
 mod typedef;
 mod util;
 mod var;
