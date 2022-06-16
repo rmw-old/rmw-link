@@ -68,7 +68,6 @@ impl<Addr: ToAddr> Ping<Addr> {
       timer: ManuallyDrop::new(timer),
     }
   }
-  pub fn recv(&self, input: Input<Addr>) {}
   pub fn pong(&self, udp: &UdpSocket, addr: &Addr) -> bool {
     if self.expire.has(addr) {
       info!("{} > pong", addr);
@@ -79,6 +78,7 @@ impl<Addr: ToAddr> Ping<Addr> {
       false
     }
   }
+  pub fn recv(&self, input: Input<Addr>) {}
 }
 /*
        println!("{} {:?} > {}", addr, &cmd, &msg.len());

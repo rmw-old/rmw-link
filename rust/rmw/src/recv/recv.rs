@@ -25,8 +25,8 @@ pub struct Recv<Addr: ToAddr> {
   pub timer: ManuallyDrop<[JoinHandle<()>; 1]>,
   pub udp: UdpSocket,
   pub ping: Ping<Addr>,
-  pub kv: Arc<Kv>,
-  pub db: db::Db,
+  //pub kv: Arc<Kv>,
+  //pub db: db::Db,
   pub kad: Arc<Mutex<Kad<Addr>>>,
 }
 
@@ -63,8 +63,8 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
           ping.expire.clone(),
         )),
       ]),
-      kv,
-      db,
+      //kv,
+      //db,
       kad,
       udp,
       ping,
