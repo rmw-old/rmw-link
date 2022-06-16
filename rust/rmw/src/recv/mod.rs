@@ -1,3 +1,5 @@
+mod ping;
+
 use crate::{
   hash128_bytes,
   kad::Kad,
