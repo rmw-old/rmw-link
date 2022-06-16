@@ -5,7 +5,7 @@ use crate::{
   util::udp::{send_to, Input},
   var::{self, EXPIRE, PING},
 };
-use async_std::task::{self, JoinHandle};
+use async_std::task::{self, spawn, JoinHandle};
 use ed25519_dalek_blake3::{Keypair, Signature, Signer};
 use expire_map::ExpireMap;
 use kv::Kv;
@@ -32,7 +32,7 @@ impl<Addr: ToAddr> Drop for Ping<Addr> {
   fn drop(&mut self) {
     let mut timer = unsafe { MaybeUninit::uninit().assume_init() };
     swap(&mut timer, &mut *self.timer);
-    timer.cancel();
+    spawn(timer.cancel());
   }
 }
 
