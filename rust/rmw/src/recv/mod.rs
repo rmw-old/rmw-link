@@ -1,3 +1,3 @@
 mod ping;
-pub mod recv;
+mod recv;
 pub use recv::Recv;
