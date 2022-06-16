@@ -23,7 +23,6 @@ use std::{
 };
 use time::sec;
 use twox_hash::xxh3::{hash128, hash64};
-use x25519_dalek::{PublicKey as X25519PublicKey, StaticSecret};
 
 pub struct Recv<Addr: ToAddr> {
   pub timer: ManuallyDrop<[JoinHandle<()>; 1]>,
