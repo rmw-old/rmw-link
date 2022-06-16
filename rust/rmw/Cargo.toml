@@ -22,7 +22,7 @@ time = { path = "../time" }
 upnp = { path = '../upnp', optional = true }
 anyhow = "1.0.57"
 async-std = "1.11.0"
-const-str = "0.3.1"
+const-str = "0.4.0"
 dir = { path = "../dir" }
 enum_dispatch = "0.3.8"
 log = "0.4.17"

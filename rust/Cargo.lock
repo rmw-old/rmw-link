@@ -419,23 +419,9 @@ dependencies = [
 
 [[package]]
 name = "const-str"
-version = "0.3.1"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b60160dfb442e53d068d55ec16675a7d9df6cacd072d3540742a1e7bcdb6150"
-dependencies = [
- "const-str-proc-macro",
-]
-
-[[package]]
-name = "const-str-proc-macro"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c047fef6b3d672b32b454079702745d0fc64a69a2c7933caf75684ba41d5df2"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
+checksum = "eb86d134799fde3563c41242055c9f1547876993db844f4b0a81b39f99cfb226"
 
 [[package]]
 name = "constant_time_eq"
@@ -2509,9 +2495,9 @@ dependencies = [
 
 [[package]]
 name = "xxblake3"
-version = "0.0.6"
+version = "0.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba66312b6e94d902855a78d1d5a127cd2df7a9efdb48311bae82fa10ff336303"
+checksum = "906ed58ef2113502268ed7bcd4530bb24c5dff85802fe645aac28da7d4c45083"
 dependencies = [
  "blake3",
  "twox-hash",
