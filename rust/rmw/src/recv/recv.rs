@@ -44,7 +44,7 @@ impl<Addr: ToAddr + FromBytes<Addr> + VecFromBytes<Addr>> Recv<Addr> {
         match u32::from_le_bytes(msg[..4].try_into().unwrap()) {
           0 => self.ping.recv(input),
           id => {
-            dbg!(&input.addr, id);
+            dbg!(&input.addr, id, &msg[4..]);
           }
         }
       }
