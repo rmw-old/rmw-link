@@ -40,17 +40,17 @@ pub async fn kad_net<Addr: ToAddr + addrbytes::FromBytes<Addr>>(
               let rp = &range[pos];
               midpoint!(rp.start(),rp.end())
             }.to_be_bytes();
+              /*
             if let Ok(Some(v)) = kv.addr_sk_encrypt(&addr.to_bytes(),&find) {
               //todo
-              /*
               dbg!(v.len());
               let msg = [
                 &[Cmd::FindNode as u8][..],
                 &v
               ].concat();
               send_to(&udp,&msg,addr)
-              */
             }
+              */
           }
         }
 
